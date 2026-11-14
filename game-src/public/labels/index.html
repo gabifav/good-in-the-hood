@@ -37,10 +37,12 @@
   .other { margin-top: 8px; font-size: 14px; padding: 6px 10px; }
   .hint { font-size: 13px; color: var(--inkL); margin: 6px 0 0; }
   .preview { display: flex; justify-content: center; margin-top: 10px; }
+  @font-face { font-family: 'LabelName'; src: url(fonts/Questrial-Regular.ttf); }
+  @font-face { font-family: 'LabelBold'; src: url(fonts/Jost-Bold.ttf); }
   .bigLabel { width: 256px; height: 97px; background: #fff; border: 2px dashed #b9a3e3; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6px 10px; font-family: Helvetica, Arial, sans-serif; position: relative; }
-  .bigLabel .n { font-weight: 700; font-size: 18px; line-height: 1.1; }
-  .bigLabel .d { font-weight: 700; font-size: 10px; color: #2f7a4f; letter-spacing: .5px; margin-top: 3px; text-transform: uppercase; }
-  .bigLabel .p { font-size: 11px; margin-top: 3px; }
+  .bigLabel .n { font-family: LabelName, 'Century Gothic', sans-serif; font-size: 15px; line-height: 1.15; }
+  .bigLabel .d { font-family: LabelBold, sans-serif; font-size: 13px; color: #EE0000; margin-top: 3px; }
+  .bigLabel .p { font-family: LabelBold, sans-serif; font-size: 13px; color: #00B050; margin-top: 3px; }
   .bigLabel .f { position: absolute; right: 6px; bottom: 3px; font-size: 7px; font-weight: 700; color: #b0507a; }
   .sheet { background: #fff; border: 2px solid #c9c2b4; border-radius: 4px; margin: 10px auto 0; position: relative; width: 100%; max-width: 420px; aspect-ratio: 210 / 297; overflow: hidden; }
   .sheet .lab { position: absolute; border: 1px dashed #d7cfe0; border-radius: 3px; overflow: hidden; font-size: 5px; line-height: 1.15; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1px; }
@@ -69,7 +71,7 @@
     <div class="row" style="margin-top:8px">
       <label class="filebtn"><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>📎 Upload spreadsheet</label>
     </div>
-    <textarea id="paste" rows="3" placeholder="…or paste rows here (Meal name, Dietary, Packed date)"></textarea>
+    <textarea id="paste" rows="3" placeholder="…or paste rows here (meal names in the first column; dietary and packed date columns optional)"></textarea>
     <div class="row" style="margin-top:6px"><button class="plain" id="pasteGo">Use pasted rows</button></div>
     <p class="hint" id="importMsg"></p>
   </section>
@@ -89,7 +91,6 @@
   <section>
     <h2>2. Packed date</h2>
     <input type="date" id="packed" aria-label="Packed date">
-    <label class="switch"><input type="checkbox" id="footerOn"> Add a small "Good in the Hood ♥" to each label</label>
     <div class="preview"><div class="bigLabel" id="big"></div></div>
     <p class="hint" style="text-align:center">Preview of one label (actual size is 64 × 24 mm)</p>
   </section>
@@ -127,10 +128,11 @@
 <script>
 (() => {
   // Avery L7157: A4, 33 labels (3 × 11), each 64 × 24.3 mm. Millimetres.
-  const P = { cols: 3, rows: 11, w: 64, h: 24.3, left: 6.46, top: 14.85, hp: 66.54, vp: 24.3 };
+  // Measurements taken from the team's Word mail-merge template (Meals Label Master Template).
+  const P = { cols: 3, rows: 11, w: 64, h: 24.29, left: 6.2, top: 13.99, hp: 66.54, vp: 24.29 };
   const PER = P.cols * P.rows;
-  const DIETARY = ['Vegetarian', 'Vegan', 'Gluten free', 'Dairy free', 'Nut free', 'Halal'];
-  const KEY = 'gith-labels-v2';
+  const DIETARY = ['GF', 'DF', 'LF', 'V', 'VG', 'NF', 'Halal'];
+  const KEY = 'gith-labels-v3';
   const $ = id => document.getElementById(id);
   const stored = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } })();
   const blank = () => ({ name: '', diet: [], other: '', qty: 6 });
@@ -141,7 +143,9 @@
   const toast = t => { const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.style.opacity = 0, 1600); setTimeout(() => e.remove(), 2100); };
   const fmt = s => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const dietText = m => [...m.diet, ...(m.other.trim() ? [m.other.trim()] : [])].join(' · ');
+  const dietText = m => [...m.diet, ...(m.other.trim() ? [m.other.trim()] : [])].join(', ');
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const packedFmt = s => { const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d); return `${DAYS[dt.getDay()]}, ${d}/${String(m).padStart(2, '0')}/${String(y).slice(2)}`; };
 
   // ── Meals ───────────────────────────────────────────────────────────────
   function renderMeals() {
@@ -150,9 +154,9 @@
       const el = document.createElement('div'); el.className = 'meal';
       el.innerHTML = `<div class="top"><input class="name" placeholder="Meal name, e.g. Veggie curry" value="${esc(m.name)}" aria-label="Meal name">
         <div class="qty"><button class="x" data-d="-1" aria-label="fewer">−</button><input type="number" min="0" max="99" value="${m.qty}" inputmode="numeric" aria-label="How many labels"><button class="x" data-d="1" aria-label="more">+</button></div></div>
-        <label style="margin-top:8px">Dietary (only if it applies)</label>
+        <label style="margin-top:8px">Dietary (only if it applies, prints in red)</label>
         <div class="chips"></div>
-        <input class="other" placeholder="Other dietary info (optional), e.g. Low sugar" value="${esc(m.other)}">
+        <input class="other" placeholder="Other dietary (optional), e.g. Low sugar" value="${esc(m.other)}">
         <div class="row" style="margin-top:8px"><button class="plain" data-fav>☆ Save meal</button><button class="plain" data-del>Remove</button></div>`;
       const [name, qty] = el.querySelectorAll('.top input');
       name.oninput = () => { m.name = name.value; update(); };
@@ -202,9 +206,8 @@
   $('addMeal').onclick = () => { state.meals.push(blank()); renderMeals(); update(); };
 
   // ── Date, footer, sheet ─────────────────────────────────────────────────
-  $('packed').value = state.packed; $('footerOn').checked = state.footer;
+  $('packed').value = state.packed;
   $('packed').oninput = e => { state.packed = e.target.value || iso(today); update(); };
-  $('footerOn').onchange = e => { state.footer = e.target.checked; update(); };
   $('skip').value = state.skip; $('nx').value = state.nx; $('ny').value = state.ny;
   $('skip').oninput = e => { state.skip = Math.min(PER, Math.max(1, parseInt(e.target.value) || 1)); update(); };
   $('nx').oninput = e => { state.nx = parseFloat(e.target.value) || 0; save(); };
@@ -215,8 +218,8 @@
 
   function update() {
     save();
-    const first = state.meals.find(m => m.name.trim()) || { name: 'Meal name', diet: ['Vegetarian'], other: '' };
-    $('big').innerHTML = `<div class="n">${esc(first.name)}</div>${dietText(first) ? `<div class="d">${esc(dietText(first))}</div>` : ''}<div class="p">Packed: <b>${fmt(state.packed)}</b></div>${state.footer ? '<div class="f">Good in the Hood ♥</div>' : ''}`;
+    const first = state.meals.find(m => m.name.trim()) || { name: 'Lamb Souvlaki & Veg', diet: ['LF'], other: '' };
+    $('big').innerHTML = `<div class="n">${esc(first.name)}</div>${dietText(first) ? `<div class="d">${esc(dietText(first))}</div>` : ''}<div class="p">Packed: ${packedFmt(first.packed || state.packed)}</div>`;
     const labels = labelList(), skip = state.skip - 1;
     const sheets = labels.length ? Math.ceil((labels.length + skip) / PER) : 0;
     $('count').textContent = labels.length ? `${labels.length} label${labels.length > 1 ? 's' : ''} · ${sheets} sheet${sheets > 1 ? 's' : ''}` : 'Type a meal name to see your labels';
@@ -231,55 +234,51 @@
   }
 
   // ── PDF ─────────────────────────────────────────────────────────────────
-  function heart(doc, x, y, s) {
-    doc.setFillColor(176, 80, 122);
-    doc.circle(x - s * 0.25, y, s * 0.28, 'F'); doc.circle(x + s * 0.25, y, s * 0.28, 'F');
-    doc.triangle(x - s * 0.52, y + s * 0.08, x + s * 0.52, y + s * 0.08, x, y + s * 0.62, 'F');
-  }
   const PT = 0.3528; // mm per point
-  function drawLabel(doc, x, y, m) {
-    const cx = x + P.w / 2, W = P.w - 6;
-    const diet = dietText(m).toUpperCase();
-    // meal name: one line, shrinking; if very long, wrap to two lines
-    doc.setFont('helvetica', 'bold');
-    let size = 14, nameLines = [m.name.trim()];
+  let fontData = null;
+  async function loadFonts() {
+    if (fontData) return fontData;
+    const get = async u => { const b = new Uint8Array(await (await fetch(u)).arrayBuffer()); let s = ''; for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s); };
+    try { fontData = { name: await get('fonts/Questrial-Regular.ttf'), bold: await get('fonts/Jost-Bold.ttf') }; } catch { fontData = {}; }
+    return fontData;
+  }
+  function addFonts(doc) {
+    if (fontData && fontData.name) {
+      doc.addFileToVFS('Questrial.ttf', fontData.name); doc.addFont('Questrial.ttf', 'LabelName', 'normal');
+      doc.addFileToVFS('JostBold.ttf', fontData.bold); doc.addFont('JostBold.ttf', 'LabelBold', 'normal');
+      return { name: ['LabelName', 'normal'], bold: ['LabelBold', 'normal'] };
+    }
+    return { name: ['helvetica', 'normal'], bold: ['helvetica', 'bold'] };
+  }
+  // Layout copied from the Word template: name 11pt (centred), dietary 10pt bold red, "Packed: Tue, 27/10/26" 10pt bold green.
+  function drawLabel(doc, F, x, y, m) {
+    const cx = x + P.w / 2, W = P.w - 4;
+    const diet = dietText(m);
+    doc.setFont(...F.name);
+    let size = 11, nameLines = [m.name.trim()];
     doc.setFontSize(size);
-    while (doc.getTextWidth(nameLines[0]) > W && size > 9.5) { size -= 0.5; doc.setFontSize(size); }
-    if (doc.getTextWidth(nameLines[0]) > W) { size = 9.5; doc.setFontSize(size); nameLines = doc.splitTextToSize(m.name.trim(), W).slice(0, 2); }
-    const dietSize = 7, packSize = 8.5;
-    const blocks = [{ h: nameLines.length * size * PT * 1.05 }, ...(diet ? [{ h: dietSize * PT * 1.25 }] : []), { h: packSize * PT * 1.25 }];
-    const total = blocks.reduce((a, b) => a + b.h, 0) + (blocks.length - 1) * 0.9;
-    const footerH = state.footer ? 2.2 : 0;
-    let cy = y + (P.h - footerH - total) / 2 + (state.footer ? 0.3 : 0);
-    // name
-    doc.setTextColor(40, 32, 48);
-    nameLines.forEach((l, i) => doc.text(l, cx, cy + (i + 0.8) * size * PT * 1.05, { align: 'center' }));
-    cy += blocks[0].h + 0.9;
-    // dietary (green, only if any)
+    if (doc.getTextWidth(nameLines[0]) > W) nameLines = doc.splitTextToSize(m.name.trim(), W);
+    while (nameLines.length > 2 && size > 8) { size -= 0.5; doc.setFontSize(size); nameLines = doc.splitTextToSize(m.name.trim(), W); }
+    nameLines = nameLines.slice(0, 2);
+    const small = 10, gap = 0.8;
+    const lh = s => s * PT * 1.15;
+    const total = nameLines.length * lh(size) + (diet ? gap + lh(small) : 0) + gap + lh(small);
+    let cy = y + (P.h - total) / 2;
+    doc.setTextColor(0, 0, 0);
+    nameLines.forEach(l => { doc.text(l, cx, cy + size * PT * 0.85, { align: 'center' }); cy += lh(size); });
+    doc.setFont(...F.bold); doc.setFontSize(small);
     if (diet) {
-      doc.setFontSize(dietSize); doc.setTextColor(47, 122, 79);
+      cy += gap; doc.setTextColor(238, 0, 0);
       let t = diet; while (doc.getTextWidth(t) > W && t.length > 4) t = t.slice(0, -2);
-      doc.text(t === diet ? t : t + '…', cx, cy + dietSize * PT * 0.95, { align: 'center' });
-      cy += dietSize * PT * 1.25 + 0.9;
+      doc.text(t === diet ? t : t + '…', cx, cy + small * PT * 0.85, { align: 'center' }); cy += lh(small);
     }
-    // packed date
-    doc.setTextColor(40, 32, 48); doc.setFontSize(packSize);
-    const lbl = 'Packed: ', val = fmt(m.packed || state.packed);
-    doc.setFont('helvetica', 'normal'); const w1 = doc.getTextWidth(lbl);
-    doc.setFont('helvetica', 'bold'); const w2 = doc.getTextWidth(val);
-    const sx = cx - (w1 + w2) / 2, by = cy + packSize * PT * 0.95;
-    doc.setFont('helvetica', 'normal'); doc.text(lbl, sx, by);
-    doc.setFont('helvetica', 'bold'); doc.text(val, sx + w1, by);
-    if (state.footer) {
-      doc.setFontSize(5); doc.setTextColor(176, 80, 122); doc.setFont('helvetica', 'bold');
-      const fy = y + P.h - 1.4;
-      doc.text('Good in the Hood', x + P.w - 4.2, fy, { align: 'right' });
-      heart(doc, x + P.w - 3, fy - 0.85, 1.6);
-    }
+    cy += gap; doc.setTextColor(0, 176, 80);
+    doc.text('Packed: ' + packedFmt(m.packed || state.packed), cx, cy + small * PT * 0.85, { align: 'center' });
   }
   function makePdf(test) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const F = addFonts(doc);
     const S = slots(), ox = state.nx, oy = state.ny;
     if (test) {
       doc.setDrawColor(239, 107, 143); doc.setLineWidth(0.3);
@@ -290,7 +289,7 @@
     }
     const labels = labelList(); if (!labels.length) return null;
     let idx = state.skip - 1;
-    labels.forEach(m => { if (idx >= PER) { doc.addPage(); idx = 0; } const s = S[idx++]; drawLabel(doc, s.x + ox, s.y + oy, m); });
+    labels.forEach(m => { if (idx >= PER) { doc.addPage(); idx = 0; } const s = S[idx++]; drawLabel(doc, F, s.x + ox, s.y + oy, m); });
     return doc;
   }
   async function output(doc, name) {
@@ -303,7 +302,7 @@
     const w = window.open(url, '_blank');
     if (!w) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
   }
-  $('print').onclick = () => { const doc = makePdf(false); if (!doc) { toast('Type a meal name first'); return; } output(doc, `meal-labels-${state.packed}.pdf`); };
+  $('print').onclick = async () => { await loadFonts(); const doc = makePdf(false); if (!doc) { toast('Type a meal name first'); return; } output(doc, `meal-labels-${state.packed}.pdf`); };
   $('test').onclick = () => output(makePdf(true), 'label-alignment-test.pdf');
 
   // ── Import (mail merge list) ────────────────────────────────────────────
@@ -321,8 +320,8 @@
     rows = rows.map(r => r.map(c => c instanceof Date ? c : (c == null ? '' : String(c).trim()))).filter(r => r.some(c => c !== ''));
     if (!rows.length) { $('importMsg').textContent = 'No rows found.'; return; }
     const head = rows[0].map(c => String(c).toLowerCase());
-    const find = re => head.findIndex(h => re.test(h));
-    let ci = { name: find(/meal|name|item|dish|product|description/), diet: find(/diet|allerg|requirement|special|note/), date: find(/pack|date|made|prep/), qty: find(/qty|quant|count|number|labels|how many|amount/) };
+    const find = re => head.findIndex(h => re.test(h.trim()));
+    let ci = { name: find(/^(meals?|meal names?|names?|items?|dish(es)?|products?|descriptions?)$/), diet: find(/^(diet(ary)?|dietary (info|requirements?|notes?)|allergens?|allergies|requirements?|notes?)$/), date: find(/^(packed|pack(ed)? date|date( packed)?|made|date made)$/), qty: find(/^(qty|quantity|count|number|labels|how many|amount)$/) };
     const hasHeader = ci.name >= 0 || ci.diet >= 0 || ci.date >= 0;
     if (!hasHeader) ci = { name: 0, diet: 1, date: 2, qty: -1 };
     if (ci.name < 0) ci.name = 0;
@@ -332,8 +331,8 @@
       const name = String(r[ci.name] || '').trim(); if (!name) continue;
       const dietRaw = ci.diet >= 0 ? String(r[ci.diet] || '') : '';
       const diet = [], other = [];
-      dietRaw.split(/[,;\/|]+| and /i).map(x => x.trim()).filter(x => x && !/^(none|n\/?a|-|no)$/i.test(x)).forEach(x => {
-        const k = DIETARY.find(d => d.toLowerCase().replace(/[^a-z]/g, '') === x.toLowerCase().replace(/[^a-z]/g, '').replace(/^gf$/, 'glutenfree').replace(/^df$/, 'dairyfree').replace(/^veg$/, 'vegetarian'));
+      dietRaw.split(/[,;\/|]+/).map(x => x.trim()).filter(x => x && !/^(none|n\/?a|-|no)$/i.test(x)).forEach(x => {
+        const k = DIETARY.find(d => d.toLowerCase() === x.toLowerCase());
         if (k) diet.push(k); else other.push(x);
       });
       const qty = ci.qty >= 0 ? Math.max(1, parseInt(r[ci.qty]) || 1) : 1;
@@ -365,7 +364,8 @@
     importRows(t.split(/\r?\n/).map(l => l.split(sep)));
   };
 
-  window.__labels = { state, makePdf, importRows };
+  loadFonts();
+  window.__labels = { state, makePdf, importRows, loadFonts };
   renderMeals(); renderFavs(); update();
 })();
 </script>

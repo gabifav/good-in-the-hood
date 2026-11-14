@@ -7,7 +7,7 @@ import { loadSave, writeSave, freshSave, type SaveData } from './save';
 import { audio, unlockAudio, sfx, setMusic, setMusicMode } from './audio';
 import { initInput, pollInput, input, consumeAction, isTouch, buildTouchControls } from './input';
 import { ui, h, toast, modal, dialogue, isModalOpen, confetti, fade } from './ui/dom';
-import { showTitle, chooseMode, wardrobe, trackerBoard, tartWorkshop, cookUp, teamPhoto, shiftSummary, gameMenu, howToPlay } from './ui/screens';
+import { showTitle, chooseMode, wardrobe, trackerBoard, tartWorkshop, cookUp, teamPhoto, shiftSummary, gameMenu, howToPlay, adminDesk } from './ui/screens';
 
 const T = 16;
 const canvas = document.createElement('canvas');
@@ -33,6 +33,7 @@ interface Actor {
   bubble?: { text: string; t: number };
   path?: [number, number][]; speed: number; wait?: number; state?: string;
   homeX?: number; homeY?: number;
+  glow?: number;
 }
 
 let map: MapDef = workMap();
@@ -48,6 +49,7 @@ let running = false;
 let clockMin = 9 * 60;
 let vanAnim = 0; // >0 while the van drives away
 let visitorTimer = 4;
+let entranceT = -1;
 
 export interface Bag { group: string; need: Record<string, number>; have: Record<string, number>; note: string }
 export let bag: Bag | null = null;
@@ -70,6 +72,14 @@ function buildMap(m: MapDef) {
       if (p.id === save.personId) continue;
       const s = m.spots[p.workSpot]; if (!s) continue;
       npcs.push({ x: (s[0] + 0.5) * T, y: (s[1] + 0.5) * T, dir: 'down', f: 0, at: Math.random() * 5, moving: false, kind: 'npc', person: p, speed: 0, homeX: (s[0] + 0.5) * T, homeY: (s[1] + 0.5) * T });
+    }
+  }
+  entranceT = m.id === 'work' ? 0.9 : -1;
+  if (m.id === 'work') {
+    const sian = npcs.find(n => n.person?.id === 'sian');
+    if (sian) { // Siân arrives through the front door
+      sian.x = 22.5 * T; sian.y = 10.6 * T; sian.dir = 'left';
+      sian.path = [[21.5 * T, 10.6 * T], [8.5 * T, 10.6 * T], [8.5 * T, 6.5 * T], [6.5 * T, 6.5 * T]];
     }
   }
   setMusicMode(m.id);
@@ -103,7 +113,7 @@ function animate(a: Actor, dt: number, moving: boolean) {
 }
 
 // ── Interaction targets ──────────────────────────────────────────────────
-const INTERACTIVE = new Set(['stove', 'sink', 'fridge', 'island', 'shelf', 'board', 'bagStation', 'crate', 'counter', 'sign', 'van', 'bowl', 'busStop',
+const INTERACTIVE = new Set(['adminDesk', 'stove', 'sink', 'fridge', 'island', 'shelf', 'board', 'bagStation', 'crate', 'counter', 'sign', 'van', 'bowl', 'busStop',
   'bed', 'wardrobe', 'desk', 'bookshelf', 'tv', 'couch', 'herbs', 'door', 'dining', 'pot']);
 type Target = { type: 'obj'; obj: Obj; d: number } | { type: 'npc'; a: Actor; d: number } | { type: 'dog'; d: number };
 let target: Target | null = null;
@@ -133,6 +143,7 @@ function verbFor(t: Target): string {
     case 'shelf': return `Take ${A.ITEMS[o.data!.item].name.toLowerCase()}`;
     case 'crate': return `Group ${o.data!.group} crate`;
     case 'bagStation': return bag ? 'Check order card' : 'Grab a bag';
+    case 'adminDesk': return 'Check meals & labels';
     case 'counter': return 'Pick-up counter';
     case 'island': return 'Cooking workshop';
     case 'board': return 'Tracker board';
@@ -235,9 +246,11 @@ function talkTo(n: Actor) {
   const p = n.person!;
   n.dir = player.x < n.x - 6 ? 'left' : player.x > n.x + 6 ? 'right' : player.y < n.y ? 'up' : 'down';
   const first = !save.work.metTeam.includes(p.id);
-  const i = lineIdx[p.id] = ((lineIdx[p.id] ?? -1) + 1) % p.lines.length;
+  const pool = p.lines.filter(l => l !== p.greeting);
+  const i = lineIdx[p.id] = ((lineIdx[p.id] ?? -1) + 1) % pool.length;
   const port = personPortrait(p.looks, outfitOf(p), 4, true);
-  const lines = first ? [{ who: p.name, portrait: port, text: `Hey ${playerPerson().name}! Good to see you.` }, { who: p.name, portrait: port, text: p.lines[i] }] : [{ who: p.name, portrait: port, text: p.lines[i] }];
+  const hello = p.greeting || (first ? `Hey ${playerPerson().name}! Good to see you.` : null);
+  const lines = [...(hello ? [{ who: p.name, portrait: port, text: hello }] : []), { who: p.name, portrait: port, text: pool[i] }];
   if (first) { save.work.metTeam.push(p.id); persist(); }
   // context tips
   if (p.workSpot === 'kitchen' && save.work.tartsToday < 3) lines.push({ who: p.name, portrait: port, text: 'The cooking workshop bench is right here when you\'re ready for tarts!' });
@@ -257,6 +270,7 @@ function interact(t: Target) {
       break;
     case 'crate': deposit(o.data!.group); break;
     case 'counter': deposit('pickup'); break;
+    case 'adminDesk': sfx('open'); adminDesk(); break;
     case 'board': sfx('open'); trackerBoard(false); break;
     case 'island':
       if (save.work.tartsToday >= 3) { toast('A whole tray of pumpkin tarts! 🥧 They smell amazing.', 'gold'); sfx('blip'); }
@@ -380,6 +394,25 @@ function spawn(x: number, y: number, kind: 'heart' | 'spark' | 'note', n: number
   for (let i = 0; i < n; i++) particles.push({ x: x + (Math.random() - 0.5) * 12, y, vx: (Math.random() - 0.5) * 24, vy: -20 - Math.random() * 25, life: 1 + Math.random() * 0.5, kind });
 }
 
+// ── Everyone lights up when Siân walks in ─────────────────────────────────
+const CHEERS = ['SIÂN!! ♥', 'Heyyy Siân!', "Yay, Siân's here!", 'Morning Siân! ♥', 'Siân!!', 'The vibes just went up ✨'];
+function lightUp(src: Actor) {
+  src.bubble = { text: 'Heyyyy guys!', t: 3.5 };
+  src.glow = 4;
+  spawn(src.x, src.y - 24, 'spark', 10);
+  const others = npcs.filter(n => n !== src);
+  others.forEach((n, i) => {
+    setTimeout(() => {
+      faceTo(n, src.x - n.x, src.y - n.y);
+      n.bubble = { text: CHEERS[i % CHEERS.length], t: 3 };
+      n.glow = 3.5;
+      spawn(n.x, n.y - 24, 'heart', 3);
+    }, 350 + i * 140);
+  });
+  setTimeout(() => { sfx('woof'); spawn(dog.x, dog.y - 14, 'heart', 4); }, 600);
+  sfx('big');
+}
+
 // ── Update ──────────────────────────────────────────────────────────────
 let stepT = 0;
 function update(dt: number) {
@@ -404,9 +437,28 @@ function update(dt: number) {
     while (trail.length > 30) trail.shift();
   } else dog.moving = false;
   // npcs idle
+  if (entranceT > 0) {
+    entranceT -= dt;
+    if (entranceT <= 0) {
+      const sian = npcs.find(n => n.person?.id === 'sian');
+      if (sian) lightUp(sian);
+      else if (save.personId === 'sian') { lightUp(player); }
+    }
+  }
+  if (player.glow) player.glow = Math.max(0, player.glow - dt);
+  if (player.bubble) { player.bubble.t -= dt; if (player.bubble.t <= 0) player.bubble = undefined; }
   for (const n of npcs) {
+    if (n.glow) n.glow = Math.max(0, n.glow - dt);
+    if (n.path && n.path.length) {
+      const [tx, ty] = n.path[0]; const dx = tx - n.x, dy = ty - n.y, d = Math.hypot(dx, dy);
+      if (d < 1.5) { n.path.shift(); if (!n.path.length) { n.path = undefined; n.dir = 'down'; animate(n, dt, false); } }
+      else { const st = Math.min(d, 55 * dt); n.x += dx / d * st; n.y += dy / d * st; faceTo(n, dx, dy); n.at += dt * 7; n.f = [1, 0, 2, 0][Math.floor(n.at) % 4]; }
+      if (n.bubble) { n.bubble.t -= dt; if (n.bubble.t <= 0) n.bubble = undefined; }
+      continue;
+    }
+    n.f = 0;
     n.at += dt;
-    if (n.at > 4 + Math.random() * 3) { n.at = 0; if (!n.bubble) n.dir = r(['down', 'left', 'right', 'down'] as Dir[]); }
+    if (n.at > 4 + Math.random() * 3) { n.at = 0; if (!n.bubble && !n.glow) n.dir = r(['down', 'left', 'right', 'down'] as Dir[]); }
     if (n.bubble) { n.bubble.t -= dt; if (n.bubble.t <= 0) n.bubble = undefined; }
   }
   for (const v of visitors) if (v.bubble) { v.bubble.t -= dt; if (v.bubble.t <= 0) v.bubble = undefined; }
@@ -445,6 +497,7 @@ function objSprite(o: Obj): HTMLCanvasElement | null {
     case 'bagStation': return A.bagStationArt();
     case 'table': return A.tableArt(o.w);
     case 'counter': return A.counterArt(save.work.pickupWaiting);
+    case 'adminDesk': return A.adminDeskArt();
     case 'board': return A.boardArt(GROUPS.map(g => Math.min(1, (save.work.progress[g.id] || 0) / g.bags)));
     case 'stove': return A.stoveArt();
     case 'bench': return A.benchArt(false);
@@ -512,11 +565,17 @@ function render() {
     }
     const p = a.person; const looks = a.looks || p!.looks; const outfit = a.outfit || outfitOf(p!);
     const s = personSheet(looks, outfit); const row = ['down', 'left', 'right', 'up'].indexOf(a.dir);
+    if (a.glow && a.glow > 0) {
+      const g = ctx.createRadialGradient(a.x, a.y - 10, 2, a.x, a.y - 10, 20);
+      g.addColorStop(0, `rgba(255,236,150,${Math.min(1, a.glow) * 0.7})`); g.addColorStop(1, 'rgba(255,236,150,0)');
+      ctx.fillStyle = g; ctx.fillRect(a.x - 20, a.y - 30, 40, 40);
+    }
     // shadow
     ctx.fillStyle = 'rgba(59,47,69,0.18)'; ctx.fillRect(Math.round(a.x - 6), Math.round(a.y + 1), 12, 3);
     ctx.drawImage(s, a.f * CW, row * CH, CW, CH, Math.round(a.x - CW / 2), Math.round(a.y - CH + 3), CW, CH);
   };
   const pActor = { ...player, person: playerPerson() };
+  (pActor as Actor).glow = player.glow;
   list.push({ y: player.y, draw: () => drawActor(pActor) });
   list.push({ y: dog.y, draw: () => drawActor(dog) });
   for (const n of npcs) list.push({ y: n.y, draw: () => drawActor(n) });
@@ -525,7 +584,7 @@ function render() {
 
   // name tags for nearby teammates + speech bubbles
   ctx.textAlign = 'center';
-  for (const a of [...npcs, ...visitors]) {
+  for (const a of [...npcs, ...visitors, player]) {
     if (a.kind === 'npc' && target?.type === 'npc' && target.a === a) {
       drawTag(a.person!.name, a.x, a.y - 27, '#f7b8cf');
     }

@@ -309,6 +309,7 @@ export function howToPlay(mode: 'work' | 'home') {
     ['🥫', 'Walk to the shelves and press Space (or A) to take each item on the order card.'],
     ['📦', 'Drop the finished bag in that group\'s crate. Listen for the ding! Pick-up bags go on the front counter.'],
     ['🥧', 'Bake pumpkin tarts at the cooking workshop bench in the kitchen.'],
+    ['🏷️', 'Help Gabi, Robert & Marc at the admin desk: check meals and reprint wrong labels.'],
     ['🚐', 'When every group is packed, send off the van in the yard.'],
     ['💬', 'Chat with the crew, and pat Bowie. He follows you everywhere.'],
   ];
@@ -327,3 +328,57 @@ export function howToPlay(mode: 'work' | 'home') {
 }
 
 void ({} as Person);
+
+// ── Admin desk: labels & meal checks (Gabi, Robert & Marc's corner) ─────────
+export function adminDesk() {
+  const DISHES = [['🍛', 'Veggie curry'], ['🥣', 'Pumpkin soup'], ['🍝', 'Spag bol'], ['🍗', 'Chicken & rice'], ['🍲', 'Lentil stew'], ['🧀', 'Pasta bake'], ['🍚', 'Fried rice'], ['🥧', "Shepherd's pie"]];
+  const day = (off: number) => { const d = new Date(); d.setDate(d.getDate() + off); return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }); };
+  const crew = TEAM.filter(p => ['gabi', 'robert', 'marc'].includes(p.id) && p.id !== G.save.personId);
+  const meals = [...DISHES].sort(() => Math.random() - 0.5).slice(0, 6).map(([emoji, name]) => {
+    const roll = Math.random();
+    const problem = roll < 0.18 ? 'name' : roll < 0.34 ? 'expired' : roll < 0.48 ? 'nodate' : null;
+    const other = DISHES.filter(d => d[1] !== name)[(Math.random() * 7) | 0][1];
+    return { emoji, name, problem, label: { name: problem === 'name' ? other : name, date: problem === 'expired' ? day(-1 - ((Math.random() * 3) | 0)) : problem === 'nodate' ? '' : day(2 + ((Math.random() * 3) | 0)) } };
+  });
+  if (!meals.some(m => m.problem)) { meals[0].problem = 'nodate'; meals[0].label.date = ''; }
+  let done = 0, fixed = 0, right = 0;
+  const list = h('div', { class: 'meals' });
+  const foot = h('p', { class: 'sub' }, `Today is ${day(0)}. Check each meal: does the label match what's inside, and is the use-by date there and still good?`);
+  const why = (m: typeof meals[0]) => m.problem === 'name' ? `The label says ${m.label.name}, but it's ${m.name}!` : m.problem === 'expired' ? `That use-by date has already passed.` : m.problem === 'nodate' ? 'There\'s no use-by date on it.' : 'Label is spot on.';
+  meals.forEach(m => {
+    const lab = h('div', { class: 'label' }, h('b', {}, m.label.name), h('span', {}, m.label.date ? `Use by ${m.label.date}` : 'Use by ____'), h('small', {}, 'Good in the Hood ♥'));
+    const res = h('div', { class: 'res' });
+    const btns = h('div', { class: 'row' });
+    const card = h('div', { class: 'meal' }, h('div', { class: 'tub' }, h('span', { class: 'big' }, m.emoji), h('small', {}, m.name)), lab, h('div', { class: 'mc' }, btns, res));
+    const answer = (fix: boolean) => {
+      const correct = fix === !!m.problem;
+      if (correct) right++;
+      if (fix && m.problem) { fixed++; lab.classList.add('reprint'); lab.innerHTML = ''; lab.append(h('b', {}, m.name), h('span', {}, `Use by ${day(3)}`), h('small', {}, 'Good in the Hood ♥')); }
+      sfx(correct ? (fix ? 'pick' : 'ding') : 'oops');
+      card.classList.add(correct ? 'ok' : 'nope');
+      const helper = crew.length ? crew[(Math.random() * crew.length) | 0].name : 'The team';
+      res.textContent = correct ? (fix ? `Reprinted! ${why(m)}` : 'Good to go ✅') : `${helper} double-checks: ${why(m)}${m.problem ? ' New label printed.' : ''}`;
+      if (!correct && m.problem) { fixed++; lab.classList.add('reprint'); lab.innerHTML = ''; lab.append(h('b', {}, m.name), h('span', {}, `Use by ${day(3)}`), h('small', {}, 'Good in the Hood ♥')); }
+      btns.remove();
+      done++;
+      if (done === meals.length) finish();
+    };
+    btns.append(h('button', { class: 'btn', onclick: () => answer(false) }, '✅ Good to go'), h('button', { class: 'btn pink', onclick: () => answer(true) }, '🏷️ Reprint label'));
+    list.appendChild(card);
+  });
+  const team = h('div', { class: 'admincrew' }, ...crew.map(p => h('div', {}, h('img', { src: personPortrait(p.looks, G.outfitOf(p), 3, true), alt: '' }), h('span', {}, p.name))));
+  const body = h('div', {}, team, foot, list);
+  const m = modal({ title: '🏷️ Admin desk · labels & meal checks', wide: true, body });
+  function finish() {
+    G.save.work.mealsChecked += meals.length; G.save.work.labelsFixed += fixed; G.persist();
+    const perfect = right === meals.length;
+    if (perfect) confetti(40);
+    sfx(perfect ? 'big' : 'ding');
+    const lead = crew.find(p => p.id === 'gabi') || crew[0];
+    body.appendChild(h('div', { class: 'card done' },
+      h('b', {}, perfect ? 'Perfect check! ' : 'All checked! '), `${meals.length} meals checked, ${fixed} label${fixed === 1 ? '' : 's'} reprinted. All-time: ${G.save.work.mealsChecked} meals checked.`,
+      lead ? h('div', { class: 'sub' }, `${lead.name}: "${perfect ? 'Admin team, we did it! Not one sneaky label got past us.' : 'Nice one! Every meal leaves with the right label.'}"`) : null));
+    body.appendChild(h('div', { class: 'row end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Done ✨')));
+    m.panel.querySelector('.panel-body')!.scrollTop = 99999;
+  }
+}

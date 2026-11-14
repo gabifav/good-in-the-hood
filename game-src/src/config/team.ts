@@ -50,6 +50,8 @@ export interface Person {
   outfit: Outfit;
   /** Where they hang out during a Work shift (see world/maps.ts for spot names). */
   workSpot: string;
+  /** Said first whenever you start a chat (optional). */
+  greeting?: string;
   /** Things they say when you chat to them at work. */
   lines: string[];
 }
@@ -67,11 +69,12 @@ export const TEAM: Person[] = [
     looks: { skin: '#f2cbb0', hair: '#3a2720', hairStyle: 'shoulderSide' },
     outfit: { ...base, top: 'stripeLong', topColor: '#f3ead6', accentColor: '#2b2530', bottom: 'skirt', bottomColor: '#1f1c22', shoeColor: '#2b2530' },
     workSpot: 'kitchen',
+    greeting: 'Heyyyy guys!',
     lines: [
-      'Morning! The pumpkin tarts are calling our names.',
+      'Heyyyy guys!',
       'Pastry first, then pumpkin, then the greens. Teamwork makes the tart work!',
-      'If you\'re free, the kitchen bench always needs another pair of hands.',
-      'Every bag that goes out is someone\'s dinner tonight. That\'s pretty special.',
+      "If you're free, the kitchen bench always needs another pair of hands.",
+      "Every bag that goes out is someone's dinner tonight. That's pretty special.",
     ],
   },
   {
@@ -92,12 +95,12 @@ export const TEAM: Person[] = [
     name: 'Gabi',
     looks: { skin: '#f3c9ae', hair: '#5b3a26', hairStyle: 'bobSide', glasses: '#b9a3e3' },
     outfit: { ...base, top: 'tee', topColor: '#fbfbfb', accentColor: '#6f8fc0', bottom: 'trousers', bottomColor: '#2f3550', layer: 'lanyard', layerColor: '#6b3fa0' },
-    workSpot: 'crates',
+    workSpot: 'admin1',
     lines: [
-      'Bag done? Pop it in the right group crate and you\'ll hear the ding!',
-      'I made us a tracker once. Now it\'s a whole game. Funny how that works.',
-      'You\'re doing amazing. Seriously.',
-      'Pick-up bags go on the front counter. People come by to collect them.',
+      "Admin corner! I'm printing labels. Name, date, allergens. Every single meal.",
+      "If you've got a sec, sit down and help us check the meals. Wrong labels go back to me!",
+      "I made us a tracker once. Now it's a whole game. Funny how that works.",
+      "You're doing amazing. Seriously.",
     ],
   },
   {
@@ -131,12 +134,12 @@ export const TEAM: Person[] = [
     name: 'Robert',
     looks: { skin: '#dba27c', hair: '#4a3b33', hairStyle: 'short' },
     outfit: { ...base, top: 'tee', topColor: '#3a3a40', accentColor: '#8fa3c9', bottom: 'trousers', bottomColor: '#1c1c22', shoeColor: '#1c1c22', layer: 'vest', layerColor: '#7b7d68', hat: 'cowboy', hatColor: '#1e1b20' },
-    workSpot: 'van',
+    workSpot: 'admin2',
     lines: [
-      'Howdy, partner! This van won\'t load itself.',
-      'You like the hat? It sparkles in the sun. That\'s the point.',
-      'All these pockets and I still can\'t find my sunnies.',
-      'Pack \'em up, move \'em out!',
+      'Howdy, partner! Admin desk, reporting for duty.',
+      "Every meal gets checked. Name matches? Date's good? Then it's a yes from me.",
+      "You like the hat? It sparkles under the office lights. That's the point.",
+      "All these pockets and I still can't find the label roll.",
     ],
   },
   {
@@ -170,11 +173,11 @@ export const TEAM: Person[] = [
     name: 'Marc',
     looks: { skin: '#e3b08e', hair: '#2a1f1b', hairStyle: 'ponytail' },
     outfit: { ...base, top: 'tee', topColor: '#a9abb0', accentColor: '#a9abb0', bottom: 'trousers', bottomColor: '#2b2d36', shoeColor: '#1c1c22', layer: 'cardigan', layerColor: '#1d1d24' },
-    workSpot: 'aisle',
+    workSpot: 'admin3',
     lines: [
-      'Restocking the middle aisle. Rice and pasta are full!',
-      'Pro tip: carry the bag, not the shelf.',
-      'I could go for a frozen yoghurt after this shift.',
+      "Checking meals with Gabi and Robert. It's a very serious operation.",
+      "Pro tip: if the label says soup but it's clearly curry, it needs a new label.",
+      'I could go for a frozen yoghurt after this.',
       'Teamwork! *thumbs up*',
     ],
   },

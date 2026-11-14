@@ -59,6 +59,7 @@ export function workMap(): MapDef {
   add({ id: 'bags', kind: 'bagStation', x: 10, y: 12, w: 2, h: 1, solid: true, label: 'Bag station' });
   add({ id: 'packtable', kind: 'table', x: 12, y: 12, w: 4, h: 1, solid: true });
   ['1', '2', '3', '4', '5', '6A', '6B'].forEach((g, i) => add({ id: 'crate-' + g, kind: 'crate', x: 2 + i * 2, y: 17, w: 1, h: 1, solid: true, data: { group: g } }));
+  add({ id: 'admin', kind: 'adminDesk', x: 15, y: 16, w: 4, h: 1, solid: true, label: 'Admin desk' });
   add({ id: 'counter', kind: 'counter', x: 19, y: 14, w: 2, h: 1, solid: true, data: { group: 'pickup' }, label: 'Pick-up counter' });
   // yard
   add({ id: 'sign', kind: 'sign', x: 24, y: 4, w: 3, h: 1, solid: true, label: 'Good in the Hood' });
@@ -75,6 +76,7 @@ export function workMap(): MapDef {
     spots: {
       kitchen: [6, 6], kitchen2: [1, 6], shelves: [13, 5], aisle: [17, 10], crates: [9, 15], bags: [9, 12],
       board: [20, 3], counter: [19.5, 13], yard: [24, 13], van: [29.5, 9.5], door: [21, 8],
+      admin1: [15.5, 15.1], admin2: [17, 15.1], admin3: [18.5, 15.1],
     },
   };
 }

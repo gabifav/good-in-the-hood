@@ -406,3 +406,20 @@ export function dogBowlArt(): HTMLCanvasElement {
     outline(e); return e;
   });
 }
+
+export function adminDeskArt(): HTMLCanvasElement {
+  return cached('admin', () => {
+    const [e, c] = cv(64, 26);
+    P(c, 1, 9, 62, 7, '#c9935f'); P(c, 1, 9, 62, 1, '#ddb07c'); P(c, 3, 16, 2, 10, '#8a5a3c'); P(c, 59, 16, 2, 10, '#8a5a3c');
+    P(c, 1, 16, 62, 2, '#a26e4c');
+    // laptop
+    P(c, 5, 1, 14, 9, '#4a4652'); P(c, 6, 2, 12, 7, '#9fd0e6'); P(c, 7, 3, 6, 1, '#ffffff'); P(c, 7, 5, 8, 1, '#ffffff'); P(c, 3, 9, 18, 2, '#6d6873');
+    // label printer + label strip
+    P(c, 24, 4, 10, 6, '#ef6b8f'); P(c, 25, 5, 8, 2, '#c45b7d'); P(c, 34, 6, 6, 3, '#ffffff'); P(c, 35, 7, 4, 1, '#3b2f45');
+    // meal containers
+    for (let i = 0; i < 3; i++) { const x = 42 + i * 7; P(c, x, 4 - (i % 2), 6, 6, '#f4f1ea'); P(c, x, 4 - (i % 2), 6, 2, ['#7cc48b', '#4aa8ff', '#f0b429'][i]); P(c, x + 1, 7 - (i % 2), 4, 1, '#ffffff'); }
+    // pen pot
+    P(c, 21, 5, 2, 5, '#7cc48b'); P(c, 21, 3, 1, 2, '#3b2f45');
+    outline(e); return e;
+  });
+}

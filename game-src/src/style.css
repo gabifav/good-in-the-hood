@@ -179,3 +179,18 @@ button.cslot:hover { background: var(--butter); transform: translateY(-2px); }
 .abtn { position: absolute; right: max(22px, env(safe-area-inset-right)); bottom: max(36px, env(safe-area-inset-bottom)); width: 80px; height: 80px; border-radius: 50%; background: var(--butter); border: 4px solid var(--ink); box-shadow: var(--shadow); font-size: 24px; font-weight: 700; pointer-events: auto; touch-action: none; }
 .abtn.ready { background: #ffd34f; animation: pulse 1s infinite; }
 @keyframes pulse { 50% { transform: scale(1.07); } }
+/* admin desk */
+.admincrew { display: flex; gap: 14px; margin-bottom: 4px; }
+.admincrew > div { display: flex; flex-direction: column; align-items: center; font-size: 13px; }
+.admincrew img { width: 48px; image-rendering: pixelated; }
+.meals { display: flex; flex-direction: column; gap: 8px; }
+.meal { display: flex; gap: 10px; align-items: center; background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; flex-wrap: wrap; }
+.meal.ok { background: #effbf4; } .meal.nope { background: #fff1ea; }
+.tub { width: 92px; text-align: center; display: flex; flex-direction: column; align-items: center; background: #f4f1ea; border: 2px dashed #b9b2a0; border-radius: 10px; padding: 4px; }
+.tub small { font-size: 11px; color: var(--inkL); }
+.label { background: #fffdf6; border: 2px solid var(--ink); border-radius: 6px; padding: 4px 8px; display: flex; flex-direction: column; min-width: 120px; transform: rotate(-1.5deg); box-shadow: 2px 2px 0 rgba(59,47,69,.2); }
+.label b { font-size: 15px; } .label span { font-size: 13px; } .label small { font-size: 10px; color: #ef6b8f; }
+.label.reprint { animation: printIn .4s; border-color: #49c27d; }
+@keyframes printIn { from { transform: translateY(-8px) rotate(4deg); opacity: 0; } }
+.mc { flex: 1; min-width: 180px; }
+.res { font-size: 14px; margin-top: 4px; }

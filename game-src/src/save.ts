@@ -18,6 +18,8 @@ export interface SaveData {
     tartsToday: number;       // 0..3 stage of today's tray
     visitorsHelped: number;
     metTeam: string[];
+    mealsChecked: number;
+    labelsFixed: number;
   };
   home: {
     day: number;
@@ -34,7 +36,7 @@ const KEY = 'good-in-the-hood-save-v1';
 export function freshSave(): SaveData {
   return {
     v: 1, personId: null, custom: null, outfits: {}, mode: 'work', sound: true, music: true,
-    work: { shift: 1, progress: {}, pickupWaiting: 0, bagsAllTime: 0, shiftsDone: 0, tartBatches: 0, tartsToday: 0, visitorsHelped: 0, metTeam: [] },
+    work: { shift: 1, progress: {}, pickupWaiting: 0, bagsAllTime: 0, shiftsDone: 0, tartBatches: 0, tartsToday: 0, visitorsHelped: 0, metTeam: [], mealsChecked: 0, labelsFixed: 0 },
     home: { day: 1, herbStage: 0, wateredToday: false, mealsCooked: 0, cookedToday: false, recharge: 40, pats: 0, restedToday: false },
   };
 }

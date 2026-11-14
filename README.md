@@ -11,6 +11,10 @@ Pick your avatar from the crew (or make a new volunteer), customise your outfit,
 
 Works on phones and computers. On a phone, "Add to Home Screen" installs it like an app, and it keeps working offline after the first visit. Progress saves automatically in each browser.
 
+## Meal labels
+
+https://gabifav.github.io/good-in-the-hood/labels/ makes print-ready PDFs for Avery L7157 sheets (33 per sheet), so labels can be printed straight from a phone. Do a plain-paper alignment test first; nudge settings are remembered per device. The page lives in `game-src/public/labels/`.
+
 ## Changing things
 
 Everything lives in `game-src/`:

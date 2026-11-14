@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spud Post Maker</title>
+<meta name="theme-color" content="#c9955c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&family=Caveat:wght@600;700&display=swap">
+<style>
+  :root { --bg:#eef2e4; --paper:#fffdf7; --ink:#3b2a20; --soft:#6f5a4b; --spud:#c9955c; --spudD:#9c6c3c; --sprout:#6f9c5a; --butter:#ffd978; --blush:#ef9f98; --line:#e2dccd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Nunito", system-ui, sans-serif; }
+  header { padding: 14px max(16px, env(safe-area-inset-left)) 6px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-family: "Fredoka", sans-serif; font-size: 24px; }
+  header span { font-family: "Caveat", cursive; font-size: 22px; color: var(--spudD); }
+  main { max-width: 980px; margin: 0 auto; padding: 8px max(16px, env(safe-area-inset-left)) 120px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--paper); border-radius: 14px; padding: 14px; box-shadow: 0 8px 20px -16px rgba(59,42,32,.6); display: grid; gap: 10px; min-width: 0; }
+  .stage { position: sticky; top: 8px; }
+  @media (max-width: 760px) { .stage { position: static; } }
+  canvas { width: 100%; height: auto; border-radius: 10px; display: block; box-shadow: 0 2px 10px rgba(59,42,32,.15); }
+  label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 4px; }
+  input, textarea { width: 100%; font: inherit; font-size: 16px; border: 2px solid var(--line); border-radius: 10px; padding: 9px 11px; background: #fff; color: var(--ink); }
+  textarea { min-height: 96px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--spud); }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 6px 10px; font: inherit; font-size: 14px; cursor: pointer; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
+  .opt.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--butter); }
+  .opt i { width: 18px; height: 18px; border-radius: 6px; display: inline-block; border: 1px solid rgba(0,0,0,.15); }
+  .btn { border: none; border-radius: 12px; padding: 11px 14px; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; background: var(--butter); color: var(--ink); }
+  .btn.green { background: var(--sprout); color: #fff; }
+  .btn.ghost { background: #fff; border: 2px solid var(--line); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .slides { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .thumb { flex: none; width: 64px; border-radius: 8px; border: 3px solid transparent; cursor: pointer; padding: 0; background: none; }
+  .thumb img { width: 100%; display: block; border-radius: 5px; }
+  .thumb.on { border-color: var(--spud); }
+  .addslide { flex: none; width: 64px; aspect-ratio: 4/5; border: 2px dashed var(--line); border-radius: 8px; background: #fff; font-size: 26px; color: var(--soft); cursor: pointer; }
+  .hint { font-size: 13px; color: var(--soft); margin: 0; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 2px solid var(--line); padding: 10px max(16px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 8px; justify-content: center; z-index: 5; }
+  .bar .btn { flex: 1; max-width: 300px; font-size: 16px; padding: 13px; }
+  .ideas { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
+  .idea { text-align: left; border: 2px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; cursor: pointer; color: var(--ink); }
+  .idea b { display: block; font-size: 12px; color: var(--spudD); }
+  .toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 12px; z-index: 9; font-weight: 700; transition: opacity .4s; }
+  details summary { cursor: pointer; font-weight: 700; }
+</style>
+</head>
+<body>
+<header><h1>Spud Post Maker</h1><span>sincerely, spud</span></header>
+<main>
+  <div class="card stage">
+    <canvas id="cv" width="1080" height="1350" aria-label="Post preview"></canvas>
+    <div class="slides" id="slides"></div>
+    <p class="hint">Tap + to add carousel slides. Each slide is its own letter.</p>
+  </div>
+
+  <div class="card">
+    <div><label for="to">"to:" line</label><input id="to" maxlength="60" placeholder="to: you, on a slow day"></div>
+    <div><label for="msg">The letter</label><textarea id="msg" maxlength="320" placeholder="being a couch potato today is allowed. potatoes need rest to grow."></textarea></div>
+    <div><label for="sig">Signed</label><input id="sig" maxlength="40" value="sincerely, spud"></div>
+    <div><label>Background</label><div class="opts" id="bgs"></div></div>
+    <div><label>Who's writing?</label><div class="opts" id="moods"></div><p class="hint" id="about" style="margin-top:6px"></p></div>
+    <div class="row">
+      <button class="btn ghost" id="idea">💡 Write me a letter</button>
+      <button class="btn ghost" id="dupe">⧉ Copy slide</button>
+      <button class="btn ghost" id="del">✕ Delete slide</button>
+    </div>
+    <details>
+      <summary>📝 Ready-written letters (your first 9 posts are at the top)</summary>
+      <div class="ideas" id="ideas" style="margin-top:8px"></div>
+    </details>
+    <div><label for="handle">Your handle (shown small on every post)</label><input id="handle" maxlength="30" placeholder="@sincerely.spud" autocapitalize="off" autocomplete="off"></div>
+  </div>
+</main>
+<div class="bar">
+  <button class="btn green" id="save">💾 Save post to phone</button>
+</div>
+
+<script>
+(() => {
+  const BGS = {
+    butter: { name: 'Butter', bg: '#fff3d1', ink: '#3b2a20', accent: '#9c6c3c' },
+    sprout: { name: 'Sprout', bg: '#e3eed8', ink: '#2f3a24', accent: '#5d8a49' },
+    blush:  { name: 'Blush letter', bg: '#fbe3df', ink: '#4a2a28', accent: '#b5574f', lined: true },
+    paper:  { name: 'Paper', bg: '#fffdf7', ink: '#3b2a20', accent: '#9c6c3c', lined: true },
+    soil:   { name: 'Night', bg: '#3b2a20', ink: '#fff6e6', accent: '#ffd978' },
+  };
+  // The potato cast. Each one has their own look, sign-off and way of talking.
+  const CAST = {
+    spud:     { name: 'Spud', label: '🎀 Spud', sig: 'sincerely, spud', bg: 'blush', about: 'The original. Sweet, honest, a little shy. Writes the everyday letters.' },
+    princess: { name: 'Princess Potato', label: '👑 Princess', sig: 'royally yours, princess potato', bg: 'blush', about: 'Even princesses need potato days. Dramatic about rest, regal about self-worth.' },
+    couch:    { name: 'Couch Potato', label: '🛋️ Couch Potato', sig: 'lazily, couch potato', bg: 'paper', about: 'Professional rester. Reminds everyone that rest is productive.' },
+    hype:     { name: 'Hype Potato', label: '📣 Hype Potato', sig: 'LOUDLY, hype potato', bg: 'butter', about: 'Your biggest cheerleader. ALL CAPS energy, celebrates every small win.' },
+    nana:     { name: 'Nana Spud', label: '👓 Nana Spud', sig: 'love always, nana spud', bg: 'paper', about: 'Wise, warm and been through it all. Gentle advice and perspective.' },
+    tot:      { name: 'Tater Tot', label: '✨ Tater Tot', sig: 'smol regards, tater tot', bg: 'sprout', about: 'Tiny and new to everything. Celebrates the smallest wins and asks big questions.' },
+    spicy:    { name: 'Hot Potato', label: '🕶️ Hot Potato', sig: 'no notes, hot potato', bg: 'soil', about: 'Confident and a little sassy. Boundaries, self-respect and walking away.' },
+    sweet:    { name: 'Sweet Potato', label: '🧡 Sweet Potato', sig: 'all my love, sweet potato', bg: 'butter', about: 'The softest one. Comfort on hard days, big hugs, extra gentle.' },
+  };
+  const IDEAS = [
+    // your first 9 posts: introduce the cast
+    ['Starter 1 · meet Spud', 'to: you, new here', 'hi, i\'m spud. a small, slightly lumpy potato with a bow. i\'ll be leaving you little letters. you don\'t have to be perfect to read them.', 'spud'],
+    ['Starter 2 · meet Couch Potato', 'to: you, on a slow day', 'hi, i\'m couch potato. today\'s plan: blanket, snacks, nothing. rest is allowed. potatoes need it to grow.', 'couch'],
+    ['Starter 3 · meet Hype Potato', 'to: YOU', 'HI I\'M HYPE POTATO AND I\'M SO PROUD OF YOU FOR OPENING THIS APP AND READING THIS. THAT COUNTS.', 'hype'],
+    ['Starter 4 · meet Nana Spud', 'to: you, my dear', 'hello love, i\'m nana spud. i\'ve been mashed, roasted and boiled, and here i still am. you\'ll be alright too.', 'nana'],
+    ['Starter 5 · meet Tater Tot', 'to: you, from someone very small', 'hi!! i\'m tater tot. i tied my shoelace today. what\'s your small win? tell me!!', 'tot'],
+    ['Starter 6 · meet Hot Potato', 'to: you, who keeps saying yes', 'hot potato here. "no" is a full sentence. say it with your chest.', 'spicy'],
+    ['Starter 7 · meet Sweet Potato', 'to: you, having a hard time', 'hi, i\'m sweet potato. no advice today. just a very big, very soft hug. 🧡', 'sweet'],
+    ['Starter 8 · Princess Potato', 'to: you, royalty', 'even princesses need potato days. take off the crown, put on the trackies, rest like it\'s your royal duty.', 'princess'],
+    ['Starter 9 · the whole cast', 'to: you, from all of us', 'whichever potato you are today, you\'re welcome here. small potatoes still count.', 'spud'],
+    // more letters
+    ['Spud', 'to: you, growing quietly', 'potatoes sprout in the dark. so can you.', 'spud'],
+    ['Spud', 'to: you, feeling a bit unseasoned', 'a little bland today? that\'s okay. you\'re still good.', 'spud'],
+    ['Spud', 'to: you, on a monday', 'you don\'t have to do the whole week today. just today. maybe just the next hour.', 'spud'],
+    ['Princess Potato', 'to: you, comparing yourself', 'a princess does not compare herself to other potatoes. she adjusts her crown and carries on.', 'princess'],
+    ['Couch Potato', 'to: you, scrolling at midnight', 'this is your sign to put the phone down and go to sleep. i\'m already in bed. join me.', 'couch'],
+    ['Couch Potato', 'to: you, feeling lazy', 'rest isn\'t lazy. it\'s the growing season. i would know.', 'couch'],
+    ['Hype Potato', 'to: YOU, keeping score', 'DRANK WATER? WIN. REPLIED TO ONE MESSAGE? WIN. GOT OUT OF BED? HUGE WIN.', 'hype'],
+    ['Hype Potato', 'to: you, not noticing', 'LOOK HOW FAR YOU\'VE ROLLED. HONESTLY? SPUD-TACULAR.', 'hype'],
+    ['Nana Spud', 'to: you, in a hurry', 'slow down, love. the best roasts take their time.', 'nana'],
+    ['Nana Spud', 'to: you, mid-change', 'every chip, roast and mash started as a plain old potato. becoming something new takes time.', 'nana'],
+    ['Tater Tot', 'to: you, feeling small', 'i\'m the smallest potato and i still matter. so do you!!', 'tot'],
+    ['Hot Potato', 'to: you, overthinking that text', 'they left you on read? their loss. you\'re a whole meal.', 'spicy'],
+    ['Sweet Potato', 'to: you, after a hard week', 'you got a bit mashed this week. you\'re still whole. i\'m proud of you. 🧡', 'sweet'],
+    ['Sweet Potato', 'to: someone you love', 'send this to the person who always makes you feel less mashed.', 'sweet'],
+  ];
+  const KEY = 'spud-post-maker-v2';
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const W = 1080, H = 1350;
+  let st;
+  try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { st = null; }
+  if (!st || !Array.isArray(st.slides) || !st.slides.length) st = { slides: [{ to: IDEAS[0][1], msg: IDEAS[0][2], sig: CAST.spud.sig, bg: 'blush', who: 'spud' }], cur: 0, handle: '@sincerely.spud' };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {} };
+  const toast = t => { const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.style.opacity = 0, 1700); setTimeout(() => e.remove(), 2200); };
+  const slide = () => st.slides[st.cur];
+
+  // ── Potato drawing (flat style to match the @sincerely.spud profile picture). Design space 100×100. ──
+  const SKIN = { normal: ['#c8925c', '#b07a46'], sweet: ['#c86a42', '#a85232'] };
+  function body(c, who) {
+    const [sk, sp] = who === 'sweet' ? SKIN.sweet : SKIN.normal;
+    c.fillStyle = sk;
+    c.beginPath(); c.moveTo(50, 12); c.bezierCurveTo(24, 10, 8, 30, 9, 54); c.bezierCurveTo(10, 78, 28, 92, 51, 91); c.bezierCurveTo(76, 90, 92, 74, 91, 50); c.bezierCurveTo(90, 26, 74, 13, 50, 12); c.closePath(); c.fill();
+    c.fillStyle = sp; for (const [x, y, r] of [[24, 34, 1.8], [72, 28, 1.5], [78, 70, 2], [30, 76, 1.4]]) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+  }
+  function eyes(c, kind) {
+    c.fillStyle = '#1d1512'; c.strokeStyle = '#1d1512'; c.lineWidth = 3.2; c.lineCap = 'round';
+    if (kind === 'closed') { c.beginPath(); c.moveTo(30, 52); c.quadraticCurveTo(35, 56, 40, 52); c.moveTo(60, 52); c.quadraticCurveTo(65, 56, 70, 52); c.stroke(); return; }
+    const r = kind === 'big' ? 6.5 : 5;
+    c.beginPath(); c.arc(35, 51, r, 0, 7); c.fill(); c.beginPath(); c.arc(65, 51, r, 0, 7); c.fill();
+    if (kind === 'big') { c.fillStyle = '#fff'; c.beginPath(); c.arc(37, 49, 2, 0, 7); c.fill(); c.beginPath(); c.arc(67, 49, 2, 0, 7); c.fill(); }
+  }
+  function mouth(c, kind) {
+    c.strokeStyle = '#1d1512'; c.lineWidth = 3.2; c.lineCap = 'round';
+    if (kind === 'open') { c.fillStyle = '#5a2a22'; c.beginPath(); c.moveTo(40, 64); c.quadraticCurveTo(50, 80, 60, 64); c.closePath(); c.fill(); c.stroke(); return; }
+    if (kind === 'smirk') { c.beginPath(); c.moveTo(42, 68); c.quadraticCurveTo(54, 72, 62, 64); c.stroke(); return; }
+    if (kind === 'tiny') { c.beginPath(); c.moveTo(46, 66); c.quadraticCurveTo(50, 70, 54, 66); c.stroke(); return; }
+    c.beginPath(); c.moveTo(39, 65); c.quadraticCurveTo(50, 74, 61, 65); c.stroke();
+  }
+  function cheeks(c, col = 'rgba(240,140,150,.55)') { c.fillStyle = col; c.beginPath(); c.ellipse(26, 62, 6, 4, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(74, 62, 6, 4, 0, 0, 7); c.fill(); }
+  function bow(c, x, y, col = '#f06fb4') {
+    c.fillStyle = col; c.strokeStyle = '#1d1512'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x - 15, y - 9); c.lineTo(x - 15, y + 9); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + 15, y - 9); c.lineTo(x + 15, y + 9); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); c.stroke();
+  }
+  function heart(c, x, y, s, col) { c.fillStyle = col; c.beginPath(); c.moveTo(x, y + s * .9); c.bezierCurveTo(x - s * 1.4, y, x - s * .6, y - s * .9, x, y - s * .2); c.bezierCurveTo(x + s * .6, y - s * .9, x + s * 1.4, y, x, y + s * .9); c.fill(); }
+  function drawSpud(c, x, y, s, who) {
+    c.save(); c.translate(x, y); c.scale(s, s);
+    if (who === 'tot') { c.translate(18, 30); c.scale(.65, .65); }
+    // things behind the body
+    if (who === 'nana') { c.fillStyle = '#e9e4dc'; c.strokeStyle = '#1d1512'; c.lineWidth = 2; c.beginPath(); c.arc(50, 12, 10, 0, 7); c.fill(); c.stroke(); }
+    body(c, who);
+    switch (who) {
+      case 'spud': eyes(c); mouth(c); bow(c, 34, 22); break;
+      case 'princess':
+        eyes(c); cheeks(c); mouth(c);
+        c.fillStyle = '#f2c84b'; c.strokeStyle = '#1d1512'; c.lineWidth = 2;
+        c.beginPath(); c.moveTo(34, 20); c.lineTo(34, 4); c.lineTo(42, 13); c.lineTo(50, 1); c.lineTo(58, 13); c.lineTo(66, 4); c.lineTo(66, 20); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = '#f06fb4'; c.beginPath(); c.arc(50, 13, 2.6, 0, 7); c.fill(); break;
+      case 'couch':
+        eyes(c, 'closed'); mouth(c, 'tiny'); cheeks(c);
+        c.fillStyle = '#b9a3e3'; c.strokeStyle = '#1d1512'; c.lineWidth = 2;
+        c.beginPath(); c.moveTo(6, 72); c.quadraticCurveTo(50, 62, 94, 72); c.lineTo(92, 94); c.lineTo(8, 94); c.closePath(); c.fill(); c.stroke();
+        c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 3; for (const yy of [80, 87]) { c.beginPath(); c.moveTo(14, yy); c.lineTo(86, yy); c.stroke(); }
+        c.fillStyle = '#1d1512'; c.font = '700 14px Fredoka, sans-serif'; c.fillText('z', 84, 22); c.font = '700 10px Fredoka, sans-serif'; c.fillText('z', 93, 12); break;
+      case 'hype':
+        eyes(c, 'big'); mouth(c, 'open'); cheeks(c);
+        c.fillStyle = '#e8453c'; c.fillRect(13, 28, 74, 9); c.fillStyle = '#fff'; c.fillRect(13, 31, 74, 2.5);
+        c.strokeStyle = '#f2c84b'; c.lineWidth = 3; for (const [ax, ay] of [[4, 20], [96, 20]]) { c.beginPath(); c.moveTo(ax - 5, ay); c.lineTo(ax + 5, ay); c.moveTo(ax, ay - 5); c.lineTo(ax, ay + 5); c.stroke(); } break;
+      case 'nana':
+        eyes(c); mouth(c); cheeks(c);
+        c.strokeStyle = '#1d1512'; c.lineWidth = 2.4; c.beginPath(); c.arc(35, 51, 9, 0, 7); c.moveTo(56, 51); c.arc(65, 51, 9, Math.PI, Math.PI * 3); c.moveTo(44, 50); c.lineTo(56, 50); c.stroke();
+        c.fillStyle = '#e9e4dc'; c.beginPath(); c.ellipse(50, 20, 28, 8, 0, Math.PI, 0); c.fill(); break;
+      case 'tot':
+        eyes(c, 'big'); mouth(c, 'tiny'); cheeks(c);
+        c.fillStyle = '#6f9c5a'; c.beginPath(); c.moveTo(50, 13); c.bezierCurveTo(52, 2, 64, 0, 66, 6); c.bezierCurveTo(58, 6, 54, 9, 52, 14); c.closePath(); c.fill(); break;
+      case 'spicy':
+        mouth(c, 'smirk');
+        c.fillStyle = '#1d1512'; c.beginPath(); c.roundRect ? c.roundRect(22, 43, 24, 15, 5) : c.rect(22, 43, 24, 15); c.fill();
+        c.beginPath(); c.roundRect ? c.roundRect(54, 43, 24, 15, 5) : c.rect(54, 43, 24, 15); c.fill(); c.fillRect(44, 46, 12, 3); c.fillRect(12, 45, 12, 3); c.fillRect(76, 45, 12, 3);
+        c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(26, 46, 6, 3); c.fillRect(58, 46, 6, 3); break;
+      case 'sweet':
+        eyes(c, 'closed'); mouth(c); heart(c, 26, 62, 5.5, '#f08c96'); heart(c, 74, 62, 5.5, '#f08c96');
+        c.fillStyle = '#7a4fa0'; c.beginPath(); c.moveTo(50, 13); c.bezierCurveTo(48, 4, 40, 2, 38, 6); c.bezierCurveTo(44, 7, 47, 10, 48, 14); c.closePath(); c.fill(); break;
+    }
+    c.restore();
+  }
+
+  // ── Text helpers ─────────────────────────────────────────────────────
+  function wrap(c, text, maxW) {
+    const out = [];
+    for (const para of text.split('\n')) {
+      const words = para.split(/\s+/).filter(Boolean); let line = '';
+      for (const w of words) { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }
+      out.push(line);
+    }
+    return out;
+  }
+
+  function render(c, sl, idx, total) {
+    const B = BGS[sl.bg] || BGS.butter;
+    c.clearRect(0, 0, W, H);
+    c.fillStyle = B.bg; c.fillRect(0, 0, W, H);
+    if (B.lined) { c.strokeStyle = B.ink; c.globalAlpha = .07; c.lineWidth = 3; for (let y = 120; y < H; y += 74) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); } c.globalAlpha = 1; }
+    // tape strip
+    c.save(); c.translate(W / 2, 46); c.rotate(-.03); c.fillStyle = 'rgba(255,217,120,.85)'; c.fillRect(-110, -26, 220, 52); c.restore();
+    const PAD = 96;
+    // "to:" line
+    c.fillStyle = B.accent; c.font = '700 64px Caveat, cursive'; c.textBaseline = 'alphabetic';
+    if (sl.to.trim()) c.fillText(sl.to.trim(), PAD, 200);
+    // letter, auto-sized
+    c.fillStyle = B.ink;
+    const box = { x: PAD, y: 270, w: W - PAD * 2, h: 600 };
+    let size = 92, lines = [];
+    while (size > 44) {
+      c.font = `600 ${size}px Fredoka, sans-serif`;
+      lines = wrap(c, sl.msg.trim() || 'write your letter…', box.w);
+      if (lines.length * size * 1.22 <= box.h) break;
+      size -= 4;
+    }
+    c.font = `600 ${size}px Fredoka, sans-serif`;
+    if (!sl.msg.trim()) c.globalAlpha = .35;
+    lines.forEach((l, i) => c.fillText(l, box.x, box.y + size + i * size * 1.22));
+    c.globalAlpha = 1;
+    // spud
+    drawSpud(c, W - PAD - 330, H - 500, 3.3, sl.who);
+    // signature
+    c.fillStyle = B.accent; c.font = '700 76px Caveat, cursive'; c.textAlign = 'right';
+    if (sl.sig.trim()) c.fillText(sl.sig.trim(), W - PAD, H - 120);
+    c.textAlign = 'left';
+    // handle
+    if (st.handle.trim()) { c.font = '600 34px Nunito, sans-serif'; c.globalAlpha = .6; c.fillStyle = B.ink; const h = st.handle.trim(); c.fillText(h.startsWith('@') ? h : '@' + h, PAD, H - 64); c.globalAlpha = 1; }
+    // carousel dots
+    if (total > 1) {
+      const gap = 30, x0 = W / 2 - (total - 1) * gap / 2;
+      for (let i = 0; i < total; i++) { c.beginPath(); c.arc(x0 + i * gap, H - 40, i === idx ? 9 : 6, 0, 7); c.fillStyle = B.ink; c.globalAlpha = i === idx ? .8 : .25; c.fill(); }
+      c.globalAlpha = 1;
+      if (idx < total - 1) { c.fillStyle = B.accent; c.font = '700 54px Caveat, cursive'; c.textAlign = 'right'; c.fillText('swipe →', W - PAD, 200); c.textAlign = 'left'; }
+    }
+  }
+
+  // ── UI ────────────────────────────────────────────────────────────────
+  function opts(boxId, map, key, swatch) {
+    const box = $(boxId); box.innerHTML = '';
+    Object.entries(map).forEach(([k, v]) => {
+      const b = document.createElement('button'); b.className = 'opt' + (slide()[key] === k ? ' on' : ''); b.type = 'button';
+      b.innerHTML = swatch ? `<i style="background:${v.bg}"></i>${v.name}` : v;
+      b.onclick = () => { slide()[key] = k; opts(boxId, map, key, swatch); draw(); };
+      box.appendChild(b);
+    });
+  }
+  function castOpts() {
+    const box = $('moods'); box.innerHTML = '';
+    Object.entries(CAST).forEach(([k, v]) => {
+      const b = document.createElement('button'); b.className = 'opt' + (slide().who === k ? ' on' : ''); b.type = 'button'; b.textContent = v.label;
+      b.onclick = () => { const s = slide(), old = CAST[s.who];
+        if (!s.sig.trim() || (old && s.sig === old.sig)) s.sig = v.sig;
+        if (old && s.bg === old.bg) s.bg = v.bg;
+        s.who = k; fillForm(); draw(); };
+      box.appendChild(b);
+    });
+    $('about').textContent = (CAST[slide().who] || CAST.spud).about;
+  }
+  function fillForm() { const s = slide(); $('to').value = s.to; $('msg').value = s.msg; $('sig').value = s.sig; opts('bgs', BGS, 'bg', true); castOpts(); }
+  function thumbs() {
+    const box = $('slides'); box.innerHTML = '';
+    st.slides.forEach((s, i) => {
+      const t = document.createElement('canvas'); t.width = W; t.height = H; render(t.getContext('2d'), s, i, st.slides.length);
+      const b = document.createElement('button'); b.className = 'thumb' + (i === st.cur ? ' on' : ''); b.type = 'button'; b.setAttribute('aria-label', 'Slide ' + (i + 1));
+      const img = new Image(); img.src = t.toDataURL('image/jpeg', .5); b.appendChild(img);
+      b.onclick = () => { st.cur = i; fillForm(); draw(); };
+      box.appendChild(b);
+    });
+    const add = document.createElement('button'); add.className = 'addslide'; add.type = 'button'; add.textContent = '+'; add.setAttribute('aria-label', 'Add slide');
+    add.onclick = () => { const s = slide(); st.slides.push({ to: '', msg: '', sig: s.sig, bg: s.bg, who: s.who }); st.cur = st.slides.length - 1; fillForm(); draw(); $('msg').focus(); };
+    box.appendChild(add);
+  }
+  let thumbT = 0;
+  function draw() { render(ctx, slide(), st.cur, st.slides.length); save(); clearTimeout(thumbT); thumbT = setTimeout(thumbs, 250); }
+
+  $('to').oninput = e => { slide().to = e.target.value; draw(); };
+  $('msg').oninput = e => { slide().msg = e.target.value; draw(); };
+  $('sig').oninput = e => { slide().sig = e.target.value; draw(); };
+  $('handle').value = st.handle; $('handle').oninput = e => { st.handle = e.target.value; draw(); };
+  $('dupe').onclick = () => { st.slides.splice(st.cur + 1, 0, { ...slide() }); st.cur++; fillForm(); draw(); toast('Slide copied'); };
+  $('del').onclick = () => { if (st.slides.length === 1) { toast('This is the only slide'); return; } st.slides.splice(st.cur, 1); st.cur = Math.max(0, st.cur - 1); fillForm(); draw(); };
+  const useIdea = i => { const [, to, msg, who] = IDEAS[i]; Object.assign(slide(), { to, msg, who, sig: CAST[who].sig, bg: CAST[who].bg }); fillForm(); draw(); };
+  $('idea').onclick = () => { const mine = IDEAS.map((x, i) => [x, i]).filter(([x]) => x[3] === slide().who && !x[0].startsWith('Starter')); const pool = mine.length ? mine : IDEAS.map((x, i) => [x, i]); useIdea(pool[(Math.random() * pool.length) | 0][1]); };
+  IDEAS.forEach(([title, to, msg], i) => { const b = document.createElement('button'); b.className = 'idea'; b.type = 'button'; b.innerHTML = `<b>${title}</b>${msg}`; b.onclick = () => { useIdea(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }; $('ideas').appendChild(b); });
+
+  // ── Save ──────────────────────────────────────────────────────────────
+  const toBlob = c => new Promise(r => c.toBlob(r, 'image/png'));
+  $('save').onclick = async () => {
+    const files = [];
+    for (let i = 0; i < st.slides.length; i++) {
+      const t = document.createElement('canvas'); t.width = W; t.height = H; render(t.getContext('2d'), st.slides[i], i, st.slides.length);
+      files.push(new File([await toBlob(t)], `spud-post-${i + 1}.png`, { type: 'image/png' }));
+    }
+    if (navigator.canShare && navigator.canShare({ files }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      try { await navigator.share({ files }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    for (const f of files) { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); await new Promise(r => setTimeout(r, 300)); }
+    toast(files.length > 1 ? `Saved ${files.length} slides` : 'Saved!');
+  };
+
+  window.__spud = { st, render };
+  fillForm();
+  // wait for fonts so the canvas uses them
+  Promise.all(['600 40px Fredoka', '700 40px Caveat', '600 20px Nunito'].map(f => document.fonts.load(f))).finally(() => draw());
+  draw();
+})();
+</script>
+</body>
+</html>

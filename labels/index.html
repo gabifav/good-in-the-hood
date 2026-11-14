@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="../icon-192.png">
 <link rel="icon" href="../icon-192.png">
 <style>
-  :root { --ink:#3b2f45; --inkL:#75657f; --cream:#fff6e6; --pink:#f7b8cf; --mint:#b6ecd0; --butter:#ffe9a3; --lav:#c9b6f2; --bg:#f3ead8; }
+  :root { --ink:#3b2f45; --inkL:#75657f; --cream:#fff6e6; --pink:#f7b8cf; --mint:#b6ecd0; --butter:#ffe9a3; --lav:#c9b6f2; --bg:#f3ead8; --green:#2f7a4f; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink); }
   header { background: var(--pink); border-bottom: 4px solid var(--ink); padding: 14px 16px; position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -19,72 +19,86 @@
   h2 { font-size: 17px; margin: 0 0 8px; }
   label { font-size: 13px; font-weight: 600; display: block; margin: 6px 0 3px; }
   input, select { font: inherit; font-size: 16px; border: 2px solid var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; background: #fff; color: var(--ink); }
-  input[type=checkbox] { width: 20px; height: 20px; vertical-align: middle; margin: 0 6px 0 0; }
   .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
   .row > * { flex: 1; min-width: 120px; }
   button { font: inherit; font-size: 15px; border: 2px solid var(--ink); border-radius: 10px; padding: 8px 12px; background: var(--mint); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 rgba(59,47,69,.2); }
   button:active { transform: translateY(2px); box-shadow: none; }
-  button.pink { background: var(--pink); } button.lav { background: var(--lav); } button.butter { background: var(--butter); } button.plain { background: #fff; }
-  button.x { padding: 4px 9px; background: #fff; }
-  .meal { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 8px; margin-bottom: 8px; }
+  button.pink { background: var(--pink); } button.lav { background: var(--lav); } button.plain { background: #fff; }
+  button.x { padding: 4px 10px; background: #fff; }
+  .meal { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
   .meal .top { display: flex; gap: 6px; align-items: center; }
   .meal .top input.name { font-weight: 700; }
   .qty { display: flex; align-items: center; gap: 4px; flex: none; }
-  .qty input { width: 56px; text-align: center; padding: 8px 4px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 14px; }
-  .chip.on { background: var(--butter); }
+  .qty input { width: 54px; text-align: center; padding: 8px 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { background: #fff; border-radius: 999px; padding: 5px 11px; font-size: 14px; box-shadow: none; }
+  .chip.on { background: #c8f0d8; border-color: var(--green); color: var(--green); font-weight: 700; }
+  .fav { background: var(--butter); }
+  .other { margin-top: 8px; font-size: 14px; padding: 6px 10px; }
   .hint { font-size: 13px; color: var(--inkL); margin: 6px 0 0; }
-  .sheet { background: #fff; border: 2px solid #c9c2b4; border-radius: 4px; margin: 6px auto 0; position: relative; width: 100%; max-width: 420px; aspect-ratio: 210 / 297; overflow: hidden; }
-  .sheet .lab { position: absolute; border: 1px dashed #d7cfe0; border-radius: 3px; overflow: hidden; font-size: 5px; line-height: 1.15; padding: 1px 2px; }
-  .sheet .lab.used { background: #f5f2ec; }
-  .sheet .lab.fill { border-color: #b9a3e3; background: #fbf8ff; }
-  .sheet .lab b { display: block; font-size: 6.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .preview { display: flex; justify-content: center; margin-top: 10px; }
+  .bigLabel { width: 256px; height: 97px; background: #fff; border: 2px dashed #b9a3e3; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6px 10px; font-family: Helvetica, Arial, sans-serif; position: relative; }
+  .bigLabel .n { font-weight: 700; font-size: 18px; line-height: 1.1; }
+  .bigLabel .d { font-weight: 700; font-size: 10px; color: #2f7a4f; letter-spacing: .5px; margin-top: 3px; text-transform: uppercase; }
+  .bigLabel .p { font-size: 11px; margin-top: 3px; }
+  .bigLabel .f { position: absolute; right: 6px; bottom: 3px; font-size: 7px; font-weight: 700; color: #b0507a; }
+  .sheet { background: #fff; border: 2px solid #c9c2b4; border-radius: 4px; margin: 10px auto 0; position: relative; width: 100%; max-width: 420px; aspect-ratio: 210 / 297; overflow: hidden; }
+  .sheet .lab { position: absolute; border: 1px dashed #d7cfe0; border-radius: 3px; overflow: hidden; font-size: 5px; line-height: 1.15; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1px; }
+  .sheet .lab.used { background: #eee9e1; }
+  .sheet .lab.fill { border-color: #b9a3e3; background: #fbf8ff; font-weight: 700; font-size: 6px; }
   .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--cream); border-top: 3px solid var(--ink); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 8px; justify-content: center; z-index: 6; }
-  .bar button { flex: 1; max-width: 260px; font-size: 17px; padding: 12px; }
+  .bar button { flex: 1; max-width: 300px; font-size: 17px; padding: 12px; }
   .count { text-align: center; font-size: 14px; margin-top: 6px; }
   details summary { cursor: pointer; font-weight: 700; }
   ol { padding-left: 20px; margin: 6px 0; } ol li { margin: 4px 0; font-size: 14px; }
-  .toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: var(--butter); border: 3px solid var(--ink); border-radius: 12px; padding: 8px 14px; z-index: 9; font-weight: 600; transition: opacity .4s; }
+  .toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: var(--butter); border: 3px solid var(--ink); border-radius: 12px; padding: 8px 14px; z-index: 9; font-weight: 600; transition: opacity .4s; max-width: 90vw; text-align: center; }
+  .filebtn { display: inline-block; border: 2px solid var(--ink); border-radius: 10px; padding: 9px 14px; background: var(--lav); font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 3px 0 rgba(59,47,69,.2); flex: none; margin: 0; }
+  textarea { font: inherit; font-size: 15px; border: 2px solid var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; margin-top: 8px; background: #fff; color: var(--ink); }
+  .rowdate { font-size: 13px; color: var(--green); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
+  .rowdate button { padding: 2px 8px; font-size: 12px; }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 8px; }
+  .switch input { width: 20px; height: 20px; }
 </style>
 </head>
 <body>
 <header><h1>🏷️ Meal labels</h1><a href="../">← back to the game</a></header>
 <main>
   <section>
+    <h2>📄 From your mail merge list</h2>
+    <p class="hint" style="margin-top:0">Upload the spreadsheet you use for the mail merge (.xlsx or .csv), or copy the rows from it and paste them below. Each row becomes a label.</p>
+    <div class="row" style="margin-top:8px">
+      <label class="filebtn"><input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>📎 Upload spreadsheet</label>
+    </div>
+    <textarea id="paste" rows="3" placeholder="…or paste rows here (Meal name, Dietary, Packed date)"></textarea>
+    <div class="row" style="margin-top:6px"><button class="plain" id="pasteGo">Use pasted rows</button></div>
+    <p class="hint" id="importMsg"></p>
+  </section>
+
+  <section>
     <h2>1. Meals</h2>
     <div id="meals"></div>
-    <div class="row" style="align-items:center">
-      <button class="plain" id="addMeal">+ Add meal</button>
-      <button class="plain" id="saveFav">☆ Save these as favourites</button>
+    <div class="row">
+      <button class="plain" id="addMeal">+ Add another meal</button>
     </div>
-    <div id="favWrap" style="margin-top:10px">
-      <label>Favourites (tap to add)</label>
+    <div id="favWrap" style="margin-top:12px">
+      <label>Saved meals (tap to add · ✕ to remove)</label>
       <div class="chips" id="favs"></div>
     </div>
   </section>
 
   <section>
-    <h2>2. Dates & extras</h2>
-    <div class="row">
-      <div><label for="made">Made on</label><input type="date" id="made"></div>
-      <div><label for="days">Use within (days)</label><input type="number" id="days" min="0" max="60" value="3" inputmode="numeric"></div>
-    </div>
-    <p class="hint" id="useby"></p>
-    <label style="margin-top:10px">Extra lines on every label</label>
-    <div class="chips" id="extras"></div>
-    <label for="footer">Footer</label>
-    <input id="footer" value="Good in the Hood">
+    <h2>2. Packed date</h2>
+    <input type="date" id="packed" aria-label="Packed date">
+    <label class="switch"><input type="checkbox" id="footerOn"> Add a small "Good in the Hood ♥" to each label</label>
+    <div class="preview"><div class="bigLabel" id="big"></div></div>
+    <p class="hint" style="text-align:center">Preview of one label (actual size is 64 × 24 mm)</p>
   </section>
 
   <section>
     <h2>3. Sheet</h2>
-    <div class="row">
-      <div><label for="preset">Label sheet</label>
-        <select id="preset"></select></div>
-      <div><label for="skip">Start at label #</label><input type="number" id="skip" min="1" max="33" value="1" inputmode="numeric"></div>
-    </div>
-    <p class="hint">Using a sheet that's partly used? Set where to start. Labels count left to right, top to bottom.</p>
+    <label for="skip">Start at label # (for a partly used sheet)</label>
+    <input type="number" id="skip" min="1" max="33" value="1" inputmode="numeric">
+    <p class="hint">Avery 33 per sheet (L7157, 3 across × 11 down). Labels count left to right, top to bottom.</p>
     <div class="sheet" id="sheet"></div>
     <div class="count" id="count"></div>
   </section>
@@ -95,8 +109,8 @@
       <ol>
         <li>First time: tap <b>Test on plain paper</b>, print it, then hold it against a label sheet up to a window. The boxes should line up with the labels.</li>
         <li>If they're a little off, nudge them below (in millimetres) and test again. Your nudge is remembered on this phone.</li>
-        <li>When printing: choose the Kyocera, paper size <b>A4</b>, scale <b>100% / Actual size</b> (not "Fit to page").</li>
-        <li>Put label sheets in the bypass (side) tray, face up, and set the paper type to <b>Labels</b> if asked.</li>
+        <li>When printing: choose the Kyocera, paper <b>A4</b>, scale <b>100% / Actual size</b> (not "Fit to page").</li>
+        <li>Put label sheets in the bypass (side) tray and set the paper type to <b>Labels</b> if asked.</li>
       </ol>
       <div class="row">
         <div><label for="nx">Nudge right (mm)</label><input type="number" id="nx" step="0.5" value="0" inputmode="decimal"></div>
@@ -106,182 +120,182 @@
     </details>
   </section>
 </main>
-<div class="bar">
-  <button class="pink" id="print">🖨️ Make labels PDF</button>
-</div>
+<div class="bar"><button class="pink" id="print">🖨️ Make labels PDF</button></div>
 
 <script src="jspdf.umd.min.js"></script>
+<script src="xlsx.full.min.js" defer></script>
 <script>
 (() => {
-  // ── Label sheet presets (A4, millimetres) ───────────────────────────────
-  const PRESETS = {
-    L7157: { name: 'Avery L7157 · 33 per sheet (64 × 24.3 mm)', cols: 3, rows: 11, w: 64, h: 24.3, left: 6.46, top: 14.85, hp: 66.54, vp: 24.3 },
-    L7160: { name: 'Avery L7160 · 21 per sheet (63.5 × 38.1 mm)', cols: 3, rows: 7, w: 63.5, h: 38.1, left: 7.21, top: 15.15, hp: 66.04, vp: 38.1 },
-    L7163: { name: 'Avery L7163 · 14 per sheet (99.1 × 38.1 mm)', cols: 2, rows: 7, w: 99.1, h: 38.1, left: 4.65, top: 15.15, hp: 101.6, vp: 38.1 },
-  };
-  const EXTRAS = ['Keep refrigerated', 'Reheat until piping hot', 'Suitable for freezing', 'Vegetarian', 'Vegan'];
-  const KEY = 'gith-labels-v1';
+  // Avery L7157: A4, 33 labels (3 × 11), each 64 × 24.3 mm. Millimetres.
+  const P = { cols: 3, rows: 11, w: 64, h: 24.3, left: 6.46, top: 14.85, hp: 66.54, vp: 24.3 };
+  const PER = P.cols * P.rows;
+  const DIETARY = ['Vegetarian', 'Vegan', 'Gluten free', 'Dairy free', 'Nut free', 'Halal'];
+  const KEY = 'gith-labels-v2';
   const $ = id => document.getElementById(id);
-  const store = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } })();
+  const stored = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } })();
+  const blank = () => ({ name: '', diet: [], other: '', qty: 6 });
+  const state = Object.assign({ meals: [blank()], favs: [], skip: 1, nx: 0, ny: 0, footer: true }, stored);
+  const today = new Date(); const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  state.packed = iso(today); // always default to today
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
-
-  const today = new Date().toISOString().slice(0, 10);
-  const state = Object.assign({
-    meals: [{ name: '', contains: '', qty: 6 }],
-    favs: [{ name: 'Veggie curry', contains: '' }, { name: 'Pumpkin soup', contains: '' }, { name: 'Spaghetti bolognese', contains: 'Gluten' }, { name: 'Pumpkin, spinach & feta tarts', contains: 'Gluten, dairy, egg' }],
-    days: 3, extras: ['Keep refrigerated', 'Reheat until piping hot'], footer: 'Good in the Hood',
-    preset: 'L7157', skip: 1, nx: 0, ny: 0,
-  }, store);
-  state.made = today; // always default to today
-
   const toast = t => { const e = document.createElement('div'); e.className = 'toast'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.style.opacity = 0, 1600); setTimeout(() => e.remove(), 2100); };
-  const fmt = iso => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y.slice(2)}`; };
-  const useBy = () => { const d = new Date(state.made + 'T12:00:00'); d.setDate(d.getDate() + Number(state.days || 0)); return d.toISOString().slice(0, 10); };
+  const fmt = s => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const dietText = m => [...m.diet, ...(m.other.trim() ? [m.other.trim()] : [])].join(' · ');
 
-  // ── Meals UI ────────────────────────────────────────────────────────────
+  // ── Meals ───────────────────────────────────────────────────────────────
   function renderMeals() {
     const box = $('meals'); box.innerHTML = '';
     state.meals.forEach((m, i) => {
       const el = document.createElement('div'); el.className = 'meal';
       el.innerHTML = `<div class="top"><input class="name" placeholder="Meal name, e.g. Veggie curry" value="${esc(m.name)}" aria-label="Meal name">
-        <div class="qty"><button class="x" data-d="-1" aria-label="fewer">−</button><input type="number" min="0" max="99" value="${m.qty}" inputmode="numeric" aria-label="How many"><button class="x" data-d="1" aria-label="more">+</button></div>
-        <button class="x" data-del aria-label="Remove">✕</button></div>
-        <input class="contains" placeholder="Contains / allergens (optional), e.g. gluten, dairy" value="${esc(m.contains)}" style="margin-top:6px" aria-label="Contains">`;
+        <div class="qty"><button class="x" data-d="-1" aria-label="fewer">−</button><input type="number" min="0" max="99" value="${m.qty}" inputmode="numeric" aria-label="How many labels"><button class="x" data-d="1" aria-label="more">+</button></div></div>
+        <label style="margin-top:8px">Dietary (only if it applies)</label>
+        <div class="chips"></div>
+        <input class="other" placeholder="Other dietary info (optional), e.g. Low sugar" value="${esc(m.other)}">
+        <div class="row" style="margin-top:8px"><button class="plain" data-fav>☆ Save meal</button><button class="plain" data-del>Remove</button></div>`;
       const [name, qty] = el.querySelectorAll('.top input');
       name.oninput = () => { m.name = name.value; update(); };
-      el.querySelector('.contains').oninput = e => { m.contains = e.target.value; update(); };
       qty.oninput = () => { m.qty = Math.max(0, parseInt(qty.value) || 0); update(); };
       el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { m.qty = Math.max(0, m.qty + Number(b.dataset.d)); qty.value = m.qty; update(); });
-      el.querySelector('[data-del]').onclick = () => { state.meals.splice(i, 1); if (!state.meals.length) state.meals.push({ name: '', contains: '', qty: 6 }); renderMeals(); update(); };
+      const chips = el.querySelector('.chips');
+      DIETARY.forEach(d => {
+        const c = document.createElement('button'); c.className = 'chip' + (m.diet.includes(d) ? ' on' : ''); c.textContent = (m.diet.includes(d) ? '✓ ' : '') + d;
+        c.onclick = () => { m.diet = m.diet.includes(d) ? m.diet.filter(x => x !== d) : [...m.diet, d]; c.className = 'chip' + (m.diet.includes(d) ? ' on' : ''); c.textContent = (m.diet.includes(d) ? '✓ ' : '') + d; update(); };
+        chips.appendChild(c);
+      });
+      if (m.packed) {
+        const rd = document.createElement('div'); rd.className = 'rowdate';
+        rd.innerHTML = `📅 Packed ${fmt(m.packed)} (from your list)`;
+        const b = document.createElement('button'); b.className = 'plain'; b.textContent = 'Use the date below instead';
+        b.onclick = () => { delete m.packed; renderMeals(); update(); };
+        rd.appendChild(b); el.insertBefore(rd, el.querySelector('.row'));
+      }
+      el.querySelector('.other').oninput = e => { m.other = e.target.value; update(); };
+      el.querySelector('[data-fav]').onclick = () => {
+        if (!m.name.trim()) { toast('Type a meal name first'); return; }
+        const existing = state.favs.find(f => f.name.toLowerCase() === m.name.trim().toLowerCase());
+        if (existing) Object.assign(existing, { diet: [...m.diet], other: m.other.trim() }); else state.favs.push({ name: m.name.trim(), diet: [...m.diet], other: m.other.trim() });
+        renderFavs(); save(); toast(existing ? 'Saved meal updated ☆' : 'Saved ☆ Tap it next time to add it instantly');
+      };
+      el.querySelector('[data-del]').onclick = () => { state.meals.splice(i, 1); if (!state.meals.length) state.meals.push(blank()); renderMeals(); update(); };
       box.appendChild(el);
     });
   }
   function renderFavs() {
     const box = $('favs'); box.innerHTML = '';
     state.favs.forEach((f, i) => {
-      const c = document.createElement('button'); c.className = 'chip'; c.textContent = f.name;
+      const wrap = document.createElement('span'); wrap.style.display = 'inline-flex'; wrap.style.gap = '2px';
+      const c = document.createElement('button'); c.className = 'chip fav'; c.textContent = f.name + (f.diet.length || f.other ? ' 🌱' : '');
       c.onclick = () => {
         const empty = state.meals.find(m => !m.name.trim());
-        if (empty) Object.assign(empty, { name: f.name, contains: f.contains }); else state.meals.push({ name: f.name, contains: f.contains, qty: 6 });
+        const m = { name: f.name, diet: [...f.diet], other: f.other || '', qty: 6 };
+        if (empty) Object.assign(empty, m); else state.meals.push(m);
         renderMeals(); update(); toast('Added ' + f.name);
       };
-      c.oncontextmenu = e => { e.preventDefault(); if (confirm('Remove "' + f.name + '" from favourites?')) { state.favs.splice(i, 1); renderFavs(); save(); } };
-      box.appendChild(c);
+      const x = document.createElement('button'); x.className = 'chip'; x.textContent = '✕'; x.setAttribute('aria-label', 'Remove ' + f.name);
+      x.onclick = () => { if (confirm(`Remove "${f.name}" from saved meals?`)) { state.favs.splice(i, 1); renderFavs(); save(); } };
+      wrap.append(c, x); box.appendChild(wrap);
     });
     $('favWrap').style.display = state.favs.length ? '' : 'none';
   }
-  $('addMeal').onclick = () => { state.meals.push({ name: '', contains: '', qty: 6 }); renderMeals(); update(); };
-  $('saveFav').onclick = () => {
-    let n = 0;
-    state.meals.filter(m => m.name.trim()).forEach(m => { if (!state.favs.some(f => f.name.toLowerCase() === m.name.trim().toLowerCase())) { state.favs.push({ name: m.name.trim(), contains: m.contains.trim() }); n++; } });
-    renderFavs(); save(); toast(n ? `Saved ${n} favourite${n > 1 ? 's' : ''} ☆` : 'Already in favourites');
-  };
+  $('addMeal').onclick = () => { state.meals.push(blank()); renderMeals(); update(); };
 
-  // ── Dates & extras ──────────────────────────────────────────────────────
-  $('made').value = state.made; $('days').value = state.days; $('footer').value = state.footer;
-  $('made').oninput = e => { state.made = e.target.value || today; update(); };
-  $('days').oninput = e => { state.days = parseInt(e.target.value) || 0; update(); };
-  $('footer').oninput = e => { state.footer = e.target.value; update(); };
-  function renderExtras() {
-    const box = $('extras'); box.innerHTML = '';
-    EXTRAS.forEach(x => { const c = document.createElement('button'); c.className = 'chip' + (state.extras.includes(x) ? ' on' : ''); c.textContent = x;
-      c.onclick = () => { state.extras = state.extras.includes(x) ? state.extras.filter(y => y !== x) : [...state.extras, x]; renderExtras(); update(); }; box.appendChild(c); });
-  }
-
-  // ── Sheet ───────────────────────────────────────────────────────────────
-  Object.entries(PRESETS).forEach(([k, p]) => { const o = document.createElement('option'); o.value = k; o.textContent = p.name; $('preset').appendChild(o); });
-  $('preset').value = state.preset; $('skip').value = state.skip; $('nx').value = state.nx; $('ny').value = state.ny;
-  $('preset').oninput = e => { state.preset = e.target.value; update(); };
-  $('skip').oninput = e => { state.skip = Math.max(1, parseInt(e.target.value) || 1); update(); };
+  // ── Date, footer, sheet ─────────────────────────────────────────────────
+  $('packed').value = state.packed; $('footerOn').checked = state.footer;
+  $('packed').oninput = e => { state.packed = e.target.value || iso(today); update(); };
+  $('footerOn').onchange = e => { state.footer = e.target.checked; update(); };
+  $('skip').value = state.skip; $('nx').value = state.nx; $('ny').value = state.ny;
+  $('skip').oninput = e => { state.skip = Math.min(PER, Math.max(1, parseInt(e.target.value) || 1)); update(); };
   $('nx').oninput = e => { state.nx = parseFloat(e.target.value) || 0; save(); };
   $('ny').oninput = e => { state.ny = parseFloat(e.target.value) || 0; save(); };
 
-  function labelList() {
-    const out = [];
-    state.meals.forEach(m => { if (!m.name.trim()) return; for (let i = 0; i < m.qty; i++) out.push(m); });
-    return out;
-  }
-  function slots(p) { const s = []; for (let r = 0; r < p.rows; r++) for (let c = 0; c < p.cols; c++) s.push({ x: p.left + c * p.hp, y: p.top + r * p.vp }); return s; }
+  const labelList = () => state.meals.flatMap(m => m.name.trim() ? Array(m.qty).fill(m) : []);
+  const slots = () => { const s = []; for (let r = 0; r < P.rows; r++) for (let c = 0; c < P.cols; c++) s.push({ x: P.left + c * P.hp, y: P.top + r * P.vp }); return s; };
 
   function update() {
     save();
-    $('useby').textContent = `Use by: ${fmt(useBy())}`;
-    const p = PRESETS[state.preset], per = p.cols * p.rows;
-    $('skip').max = per;
-    const labels = labelList(), skip = Math.min(state.skip, per) - 1;
-    const sheets = labels.length ? Math.ceil((labels.length + skip) / per) : 0;
-    $('count').textContent = labels.length ? `${labels.length} label${labels.length > 1 ? 's' : ''} · ${sheets} sheet${sheets > 1 ? 's' : ''}` : 'Add a meal name to see labels';
+    const first = state.meals.find(m => m.name.trim()) || { name: 'Meal name', diet: ['Vegetarian'], other: '' };
+    $('big').innerHTML = `<div class="n">${esc(first.name)}</div>${dietText(first) ? `<div class="d">${esc(dietText(first))}</div>` : ''}<div class="p">Packed: <b>${fmt(state.packed)}</b></div>${state.footer ? '<div class="f">Good in the Hood ♥</div>' : ''}`;
+    const labels = labelList(), skip = state.skip - 1;
+    const sheets = labels.length ? Math.ceil((labels.length + skip) / PER) : 0;
+    $('count').textContent = labels.length ? `${labels.length} label${labels.length > 1 ? 's' : ''} · ${sheets} sheet${sheets > 1 ? 's' : ''}` : 'Type a meal name to see your labels';
     const sh = $('sheet'); sh.innerHTML = '';
-    slots(p).forEach((s, i) => {
+    slots().forEach((s, i) => {
       const d = document.createElement('div'); d.className = 'lab';
-      Object.assign(d.style, { left: s.x / 210 * 100 + '%', top: s.y / 297 * 100 + '%', width: p.w / 210 * 100 + '%', height: p.h / 297 * 100 + '%' });
-      const li = i - skip;
+      Object.assign(d.style, { left: s.x / 210 * 100 + '%', top: s.y / 297 * 100 + '%', width: P.w / 210 * 100 + '%', height: P.h / 297 * 100 + '%' });
       if (i < skip) d.classList.add('used');
-      else if (labels[li]) { d.classList.add('fill'); d.innerHTML = `<b>${esc(labels[li].name)}</b>Use by ${fmt(useBy())}`; }
+      else if (labels[i - skip]) { d.classList.add('fill'); d.textContent = labels[i - skip].name; }
       sh.appendChild(d);
     });
   }
 
   // ── PDF ─────────────────────────────────────────────────────────────────
-  function heart(doc, x, y, s) { // tiny pink heart
-    doc.setFillColor(239, 107, 143);
+  function heart(doc, x, y, s) {
+    doc.setFillColor(176, 80, 122);
     doc.circle(x - s * 0.25, y, s * 0.28, 'F'); doc.circle(x + s * 0.25, y, s * 0.28, 'F');
     doc.triangle(x - s * 0.52, y + s * 0.08, x + s * 0.52, y + s * 0.08, x, y + s * 0.62, 'F');
   }
-  function fitText(doc, text, maxW, size, min) {
-    let s = size; doc.setFontSize(s);
-    while (doc.getTextWidth(text) > maxW && s > min) { s -= 0.25; doc.setFontSize(s); }
-    if (doc.getTextWidth(text) > maxW) { while (text.length > 3 && doc.getTextWidth(text + '…') > maxW) text = text.slice(0, -1); text += '…'; }
-    return text;
-  }
-  function drawLabel(doc, p, x, y, m) {
-    const pad = Math.min(2.2, p.h * 0.09), W = p.w - pad * 2, compact = p.h < 30;
-    const big = compact ? 11 : 14, small = compact ? 6.6 : 8.5, tiny = compact ? 5.6 : 7;
-    let cy = y + pad + big * 0.3;
-    doc.setTextColor(40, 32, 48);
+  const PT = 0.3528; // mm per point
+  function drawLabel(doc, x, y, m) {
+    const cx = x + P.w / 2, W = P.w - 6;
+    const diet = dietText(m).toUpperCase();
+    // meal name: one line, shrinking; if very long, wrap to two lines
     doc.setFont('helvetica', 'bold');
-    doc.text(fitText(doc, m.name.trim(), W, big, 7), x + pad, cy);
-    cy += big * 0.13 + small * 0.36;
-    doc.setFontSize(small);
-    const dateLine = `Made ${fmt(state.made)}   ·   USE BY ${fmt(useBy())}`;
-    doc.text(fitText(doc, dateLine, W, small, 5), x + pad, cy);
-    doc.setFont('helvetica', 'normal');
-    const lines = [];
-    if (m.contains.trim()) lines.push('Contains: ' + m.contains.trim());
-    if (state.extras.length) lines.push(state.extras.join(' · '));
-    for (const l of lines) { cy += small * 0.4; doc.text(fitText(doc, l, W, small - 0.6, 4.5), x + pad, cy); }
-    if (state.footer.trim()) {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(tiny); doc.setTextColor(176, 80, 122);
-      const fy = y + p.h - pad * 0.75;
-      const ft = fitText(doc, state.footer.trim(), W - 4, tiny, 4.5);
-      doc.text(ft, x + p.w - pad - 3, fy, { align: 'right' });
-      heart(doc, x + p.w - pad - 1.2, fy - tiny * 0.17, tiny * 0.3);
+    let size = 14, nameLines = [m.name.trim()];
+    doc.setFontSize(size);
+    while (doc.getTextWidth(nameLines[0]) > W && size > 9.5) { size -= 0.5; doc.setFontSize(size); }
+    if (doc.getTextWidth(nameLines[0]) > W) { size = 9.5; doc.setFontSize(size); nameLines = doc.splitTextToSize(m.name.trim(), W).slice(0, 2); }
+    const dietSize = 7, packSize = 8.5;
+    const blocks = [{ h: nameLines.length * size * PT * 1.05 }, ...(diet ? [{ h: dietSize * PT * 1.25 }] : []), { h: packSize * PT * 1.25 }];
+    const total = blocks.reduce((a, b) => a + b.h, 0) + (blocks.length - 1) * 0.9;
+    const footerH = state.footer ? 2.2 : 0;
+    let cy = y + (P.h - footerH - total) / 2 + (state.footer ? 0.3 : 0);
+    // name
+    doc.setTextColor(40, 32, 48);
+    nameLines.forEach((l, i) => doc.text(l, cx, cy + (i + 0.8) * size * PT * 1.05, { align: 'center' }));
+    cy += blocks[0].h + 0.9;
+    // dietary (green, only if any)
+    if (diet) {
+      doc.setFontSize(dietSize); doc.setTextColor(47, 122, 79);
+      let t = diet; while (doc.getTextWidth(t) > W && t.length > 4) t = t.slice(0, -2);
+      doc.text(t === diet ? t : t + '…', cx, cy + dietSize * PT * 0.95, { align: 'center' });
+      cy += dietSize * PT * 1.25 + 0.9;
+    }
+    // packed date
+    doc.setTextColor(40, 32, 48); doc.setFontSize(packSize);
+    const lbl = 'Packed: ', val = fmt(m.packed || state.packed);
+    doc.setFont('helvetica', 'normal'); const w1 = doc.getTextWidth(lbl);
+    doc.setFont('helvetica', 'bold'); const w2 = doc.getTextWidth(val);
+    const sx = cx - (w1 + w2) / 2, by = cy + packSize * PT * 0.95;
+    doc.setFont('helvetica', 'normal'); doc.text(lbl, sx, by);
+    doc.setFont('helvetica', 'bold'); doc.text(val, sx + w1, by);
+    if (state.footer) {
+      doc.setFontSize(5); doc.setTextColor(176, 80, 122); doc.setFont('helvetica', 'bold');
+      const fy = y + P.h - 1.4;
+      doc.text('Good in the Hood', x + P.w - 4.2, fy, { align: 'right' });
+      heart(doc, x + P.w - 3, fy - 0.85, 1.6);
     }
   }
   function makePdf(test) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const p = PRESETS[state.preset], per = p.cols * p.rows, S = slots(p);
-    const ox = state.nx, oy = state.ny;
+    const S = slots(), ox = state.nx, oy = state.ny;
     if (test) {
       doc.setDrawColor(239, 107, 143); doc.setLineWidth(0.3);
-      S.forEach((s, i) => { doc.roundedRect(s.x + ox, s.y + oy, p.w, p.h, 1.5, 1.5); doc.setFontSize(7); doc.setTextColor(150, 140, 160); doc.text(String(i + 1), s.x + ox + 1.5, s.y + oy + 3.5); });
+      S.forEach((s, i) => { doc.roundedRect(s.x + ox, s.y + oy, P.w, P.h, 1.5, 1.5); doc.setFontSize(7); doc.setTextColor(150, 140, 160); doc.text(String(i + 1), s.x + ox + 1.5, s.y + oy + 3.5); });
       doc.setFontSize(9); doc.setTextColor(59, 47, 69);
-      doc.text('ALIGNMENT TEST · print at 100% / Actual size on plain A4, then hold against a label sheet', 105, 8, { align: 'center' });
+      doc.text('ALIGNMENT TEST - print at 100% / Actual size on plain A4, then hold against a label sheet', 105, 8, { align: 'center' });
       return doc;
     }
     const labels = labelList(); if (!labels.length) return null;
-    let idx = Math.min(state.skip, per) - 1, page = 0;
-    labels.forEach(m => {
-      if (idx >= per) { doc.addPage(); idx = 0; page++; }
-      const s = S[idx++]; drawLabel(doc, p, s.x + ox, s.y + oy, m);
-    });
+    let idx = state.skip - 1;
+    labels.forEach(m => { if (idx >= PER) { doc.addPage(); idx = 0; } const s = S[idx++]; drawLabel(doc, s.x + ox, s.y + oy, m); });
     return doc;
   }
   async function output(doc, name) {
     const blob = doc.output('blob');
     const file = new File([blob], name, { type: 'application/pdf' });
-    // Phones: share sheet → Print. Otherwise open the PDF in a new tab.
     if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
       try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === 'AbortError') return; }
     }
@@ -289,16 +303,70 @@
     const w = window.open(url, '_blank');
     if (!w) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
   }
-  $('print').onclick = () => {
-    const doc = makePdf(false);
-    if (!doc) { toast('Add a meal name first'); return; }
-    output(doc, `meal-labels-${state.made}.pdf`);
-  };
+  $('print').onclick = () => { const doc = makePdf(false); if (!doc) { toast('Type a meal name first'); return; } output(doc, `meal-labels-${state.packed}.pdf`); };
   $('test').onclick = () => output(makePdf(true), 'label-alignment-test.pdf');
 
-  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-  window.__labels = { state, makePdf };
-  renderMeals(); renderFavs(); renderExtras(); update();
+  // ── Import (mail merge list) ────────────────────────────────────────────
+  function toIso(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date && !isNaN(v)) return iso(v);
+    if (typeof v === 'number' && v > 20000 && v < 80000) { const d = new Date(Math.round((v - 25569) * 86400000)); return d.toISOString().slice(0, 10); } // Excel serial
+    const t = String(v).trim();
+    let mt = t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/); // dd/mm/yyyy (Australian)
+    if (mt) { let [, d, mo, y] = mt; if (y.length === 2) y = '20' + y; return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`; }
+    mt = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (mt) return `${mt[1]}-${mt[2].padStart(2, '0')}-${mt[3].padStart(2, '0')}`;
+    const d = new Date(t); return isNaN(d) ? null : iso(d);
+  }
+  function importRows(rows) {
+    rows = rows.map(r => r.map(c => c instanceof Date ? c : (c == null ? '' : String(c).trim()))).filter(r => r.some(c => c !== ''));
+    if (!rows.length) { $('importMsg').textContent = 'No rows found.'; return; }
+    const head = rows[0].map(c => String(c).toLowerCase());
+    const find = re => head.findIndex(h => re.test(h));
+    let ci = { name: find(/meal|name|item|dish|product|description/), diet: find(/diet|allerg|requirement|special|note/), date: find(/pack|date|made|prep/), qty: find(/qty|quant|count|number|labels|how many|amount/) };
+    const hasHeader = ci.name >= 0 || ci.diet >= 0 || ci.date >= 0;
+    if (!hasHeader) ci = { name: 0, diet: 1, date: 2, qty: -1 };
+    if (ci.name < 0) ci.name = 0;
+    const data = hasHeader ? rows.slice(1) : rows;
+    const meals = [];
+    for (const r of data) {
+      const name = String(r[ci.name] || '').trim(); if (!name) continue;
+      const dietRaw = ci.diet >= 0 ? String(r[ci.diet] || '') : '';
+      const diet = [], other = [];
+      dietRaw.split(/[,;\/|]+| and /i).map(x => x.trim()).filter(x => x && !/^(none|n\/?a|-|no)$/i.test(x)).forEach(x => {
+        const k = DIETARY.find(d => d.toLowerCase().replace(/[^a-z]/g, '') === x.toLowerCase().replace(/[^a-z]/g, '').replace(/^gf$/, 'glutenfree').replace(/^df$/, 'dairyfree').replace(/^veg$/, 'vegetarian'));
+        if (k) diet.push(k); else other.push(x);
+      });
+      const qty = ci.qty >= 0 ? Math.max(1, parseInt(r[ci.qty]) || 1) : 1;
+      const packed = ci.date >= 0 ? toIso(r[ci.date]) : null;
+      const prev = meals[meals.length - 1];
+      const m = { name, diet, other: other.join(', '), qty, ...(packed ? { packed } : {}) };
+      if (prev && prev.name === m.name && prev.other === m.other && prev.diet.join() === m.diet.join() && prev.packed === m.packed) prev.qty += qty;
+      else meals.push(m);
+    }
+    if (!meals.length) { $('importMsg').textContent = "Couldn't find any meal names in that list."; return; }
+    state.meals = meals; renderMeals(); update();
+    const n = meals.reduce((a, m) => a + m.qty, 0);
+    $('importMsg').textContent = `✅ Imported ${n} label${n > 1 ? 's' : ''} (${meals.length} meal${meals.length > 1 ? 's' : ''}). Check them below, then make the PDF.`;
+    toast(`Imported ${n} labels`);
+  }
+  $('file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      importRows(XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' }));
+    } catch (err) { $('importMsg').textContent = "Sorry, couldn't read that file. Try saving it as .xlsx or .csv."; }
+    e.target.value = '';
+  };
+  $('pasteGo').onclick = () => {
+    const t = $('paste').value.trim(); if (!t) { toast('Paste some rows first'); return; }
+    const sep = t.includes('\t') ? '\t' : t.includes(';') && !t.includes(',') ? ';' : ',';
+    importRows(t.split(/\r?\n/).map(l => l.split(sep)));
+  };
+
+  window.__labels = { state, makePdf, importRows };
+  renderMeals(); renderFavs(); update();
 })();
 </script>
 </body>

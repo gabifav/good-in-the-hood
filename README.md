@@ -13,7 +13,7 @@ Works on phones and computers. On a phone, "Add to Home Screen" installs it like
 
 ## Meal labels
 
-https://gabifav.github.io/good-in-the-hood/labels/ makes print-ready PDFs for Avery L7157 sheets (33 per sheet), so labels can be printed straight from a phone. Do a plain-paper alignment test first; nudge settings are remembered per device. The page lives in `game-src/public/labels/`.
+https://gabifav.github.io/good-in-the-hood/labels/ makes print-ready PDFs for Avery L7157 sheets (33 per sheet), so labels can be printed straight from a phone. Each label shows the meal name, dietary info (if any) and packed date. You can upload the mail-merge spreadsheet (.xlsx/.csv) or paste rows from it. Do a plain-paper alignment test first; nudge settings are remembered per device. The page lives in `game-src/public/labels/`.
 
 ## Changing things
 
